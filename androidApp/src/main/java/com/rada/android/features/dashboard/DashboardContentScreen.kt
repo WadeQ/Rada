@@ -38,7 +38,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import com.rada.android.data.TrialPreferences
+import com.rada.android.data.TrialState
+import com.rada.android.domain.requiresPro
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,6 +57,7 @@ import com.rada.shared.domain.ReportType
 fun DashboardContentScreen(
     state: DashboardState,
     isPro: Boolean,
+    trial: TrialState,
     onDrive: () -> Unit,
     onReport: () -> Unit,
     onHelp: () -> Unit,
@@ -60,6 +65,8 @@ fun DashboardContentScreen(
     onSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val proUnlocked = isPro || trial is TrialState.Active
+
     Column(modifier = modifier.fillMaxSize()) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 16.dp),
@@ -129,14 +136,23 @@ fun DashboardContentScreen(
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
                     Text(
-                        if (isPro) "You're on Pro" else "Go Pro · KES 150/month",
+                        when {
+                            isPro -> "You're on Pro"
+                            trial is TrialState.Active -> "Free trial · ${trial.daysLeft} ${if (trial.daysLeft == 1) "day" else "days"} left"
+                            trial is TrialState.Expired -> "Your free trial has ended"
+                            else -> "Go Pro · KES 150/month"
+                        },
                         color = RadaColors.TextPrimary,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        if (isPro) "Real-time checkpoints, longer warnings and offline maps are on."
-                        else "Crowd checkpoints, longer warning distance, offline maps.",
+                        when {
+                            isPro -> "Real-time checkpoints, longer warnings and offline maps are on."
+                            trial is TrialState.Active -> "Full Drive access. Go Pro to keep it after the trial."
+                            trial is TrialState.Expired -> "Go Pro · KES 150/month to keep using Drive."
+                            else -> "Try Drive free for ${TrialPreferences.TRIAL_DAYS} days, then KES 150/month."
+                        },
                         color = RadaColors.TextSecondary, fontSize = 11.5.sp
                     )
                 }
@@ -191,7 +207,7 @@ fun DashboardContentScreen(
                 )
             } else {
                 state.recentAlerts.take(COLLAPSED_ALERT_COUNT).forEach { alert ->
-                    RecentAlertCard(alert)
+                    RecentAlertCard(alert, locked = !proUnlocked && alert.type.requiresPro(), onUnlock = onUpgrade)
                     Spacer(Modifier.height(8.dp))
                 }
                 AnimatedVisibility(
@@ -201,7 +217,7 @@ fun DashboardContentScreen(
                 ) {
                     Column {
                         state.recentAlerts.drop(COLLAPSED_ALERT_COUNT).forEach { alert ->
-                            RecentAlertCard(alert)
+                            RecentAlertCard(alert, locked = !isPro && alert.type.requiresPro(), onUnlock = onUpgrade)
                             Spacer(Modifier.height(8.dp))
                         }
                     }
@@ -216,7 +232,7 @@ fun DashboardContentScreen(
 private const val COLLAPSED_ALERT_COUNT = 3
 
 @Composable
-private fun RecentAlertCard(alert: MockData.RecentAlert) {
+private fun RecentAlertCard(alert: MockData.RecentAlert, locked: Boolean, onUnlock: () -> Unit) {
     val (badgeColor, icon) = when (alert.type) {
         ReportType.CAMERA -> RadaColors.Amber to Icons.Filled.CameraAlt
         ReportType.CHECKPOINT -> RadaColors.Orange to Icons.Filled.Shield
@@ -227,6 +243,7 @@ private fun RecentAlertCard(alert: MockData.RecentAlert) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(RadaColors.Ink2)
+            .clickable(enabled = locked, onClick = onUnlock)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -247,7 +264,8 @@ private fun RecentAlertCard(alert: MockData.RecentAlert) {
                 alert.place,
                 color = RadaColors.TextPrimary,
                 fontSize = 12.5.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                modifier = if (locked) Modifier.blur(5.dp) else Modifier
             )
             Text(
                 when (alert.type) {
@@ -258,6 +276,11 @@ private fun RecentAlertCard(alert: MockData.RecentAlert) {
                 color = RadaColors.TextMuted, fontSize = 10.5.sp
             )
         }
-        Text(alert.whenLabel, color = RadaColors.TextMuted, fontSize = 11.sp)
+        Text(
+            if (locked) "Pro" else alert.whenLabel,
+            color = if (locked) RadaColors.Accent else RadaColors.TextMuted,
+            fontSize = 11.sp,
+            fontWeight = if (locked) FontWeight.Bold else FontWeight.Normal
+        )
     }
 }

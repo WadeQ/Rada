@@ -4,6 +4,7 @@ import LocationProvider
 import android.annotation.SuppressLint
 import android.location.Location
 import android.os.Looper
+import android.os.SystemClock
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
+private const val MAX_FIX_AGE_MS = 10_000L
 private const val UPDATE_INTERVAL_MS = 1000L
 private const val MIN_UPDATE_INTERVAL_MS = 500L
 private const val MPS_TO_KMH = 3.6
@@ -35,6 +37,12 @@ class AndroidLocationProvider(
         val callback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
                 for (loc in result.locations) {
+                    val ageMs = (SystemClock.elapsedRealtimeNanos() - loc.elapsedRealtimeNanos) / 1_000_000
+                    if (ageMs > MAX_FIX_AGE_MS) continue
+                    if (!loc.hasSpeed() && previous == null) {
+                        previous = loc
+                        continue
+                    }
                     val speedMps = if (loc.hasSpeed()) loc.speed else speedFromPreviousFix(previous, loc)
                     previous = loc
                     trySend(DriverState(loc.latitude, loc.longitude, speedMps * MPS_TO_KMH, loc.bearing))

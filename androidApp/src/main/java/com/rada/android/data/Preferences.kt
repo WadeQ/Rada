@@ -4,9 +4,13 @@ import android.content.Context
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "rada_prefs")
@@ -107,4 +111,41 @@ class ReportHistoryPreferences(private val context: Context) {
 
     private fun parse(raw: String?): List<Long> =
         raw?.split(",")?.mapNotNull { it.toLongOrNull() } ?: emptyList()
+}
+
+
+sealed interface TrialState {
+    data object Loading : TrialState
+    data object NotStarted : TrialState
+    data class Active(val daysLeft: Int) : TrialState
+    data object Expired : TrialState
+}
+
+class TrialPreferences(private val context: Context) {
+    private val startedKey = longPreferencesKey("drive_trial_started_at")
+
+    val state: Flow<TrialState> = combine(
+        context.dataStore.data.map { it[startedKey] },
+        flow { while (true) { emit(Unit); delay(60_000L) } }
+    ) { startedAt, _ ->
+        when {
+            startedAt == null -> TrialState.NotStarted
+            else -> {
+                val remainingMs = startedAt + TRIAL_DAYS * DAY_MS - System.currentTimeMillis()
+                if (remainingMs <= 0) TrialState.Expired
+                else TrialState.Active(((remainingMs + DAY_MS - 1) / DAY_MS).toInt())
+            }
+        }
+    }
+
+    suspend fun startIfNeeded() {
+        context.dataStore.edit { prefs ->
+            if (prefs[startedKey] == null) prefs[startedKey] = System.currentTimeMillis()
+        }
+    }
+
+    companion object {
+        const val TRIAL_DAYS = 7L
+        private const val DAY_MS = 24L * 60 * 60 * 1000
+    }
 }

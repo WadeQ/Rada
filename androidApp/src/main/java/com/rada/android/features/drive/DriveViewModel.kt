@@ -2,40 +2,65 @@ package com.rada.android.features.drive
 
 import LocationProvider
 import androidx.lifecycle.viewModelScope
+import com.rada.android.data.AlertPreferences
 import com.rada.android.data.ReportRepository
+import com.rada.android.tracking.AlertNotifications
+import com.rada.android.domain.isVisibleTo
 import com.rada.android.mvi.MviViewModel
 import com.rada.shared.data.MockData
 import com.rada.shared.domain.CameraGridIndex
 import com.rada.shared.domain.SpeedAlertEngine
 import com.rada.shared.domain.SpeedCamera
+import android.os.SystemClock
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class DriveViewModel(
     private val locationProvider: LocationProvider,
-    private val reportRepository: ReportRepository
+    private val reportRepository: ReportRepository,
+    private val alertPreferences: AlertPreferences,
+    private val notifications: AlertNotifications
 ) : MviViewModel<DriveIntent, DriveState, DriveEffect>(DriveState()) {
 
     companion object {
         private const val ACTIVE_REPORT_MAX_AGE_MINUTES = 60L
 
         private const val LOCATION_STALL_WARNING_MS = 20_000L
+        private const val STALE_AFTER_MS = 6_000L
+        private const val MIN_SPEED_FOR_HEADING_KMH = 4.0
+        private const val WATCHDOG_INTERVAL_MS = 2_000L
     }
 
     private var cameraIndex = CameraGridIndex(MockData.nairobiCameras + MockData.demoAlcoblowReport)
     private val engine = SpeedAlertEngine(cameraIndex)
     private var trackingStarted = false
+    private var locationJob: Job? = null
+    @Volatile private var isPro = false
+    @Volatile private var inForeground = true
+    @Volatile private var alertsEnabled = true
+    private var lastFixAt = 0L
     private var liveReports: List<SpeedCamera> = emptyList()
 
     override fun onIntent(intent: DriveIntent) {
         when (intent) {
             is DriveIntent.StartTracking -> startTracking()
+            is DriveIntent.AppResumed -> {
+                inForeground = true
+                if (trackingStarted) startLocation()
+            }
+            is DriveIntent.AppPaused -> inForeground = false
+            is DriveIntent.ProChanged -> isPro = intent.isPro
         }
     }
 
     private fun startTracking() {
         if (trackingStarted) return
         trackingStarted = true
+
+        viewModelScope.launch {
+            alertPreferences.alertsEnabled.collect { alertsEnabled = it }
+        }
 
         viewModelScope.launch {
             reportRepository.observeActiveCameraReports(ACTIVE_REPORT_MAX_AGE_MINUTES).collect { reports ->
@@ -62,19 +87,41 @@ class DriveViewModel(
         }
 
         viewModelScope.launch {
+            while (true) {
+                delay(WATCHDOG_INTERVAL_MS)
+                val running = locationJob?.isActive == true
+                if (running && SystemClock.elapsedRealtime() - lastFixAt > STALE_AFTER_MS) {
+                    if (!currentState.gpsStale) setState { copy(gpsStale = true) }
+                    startLocation()
+                }
+            }
+        }
+
+        startLocation()
+    }
+
+    private fun startLocation() {
+        locationJob?.cancel()
+        lastFixAt = SystemClock.elapsedRealtime()
+        locationJob = viewModelScope.launch {
             locationProvider.observeLocation().collect { driverState ->
+                lastFixAt = SystemClock.elapsedRealtime()
                 setState {
                     copy(
+                        gpsStale = false,
                         currentSpeedKmh = driverState.speedCurrent.toInt(),
                         isLoading = false,
                         locationTakingTooLong = false,
                         currentLatitude = driverState.latitude,
-                        currentLongitude = driverState.longitude
+                        currentLongitude = driverState.longitude,
+                        bearingDegrees = if (driverState.speedCurrent > MIN_SPEED_FOR_HEADING_KMH) driverState.bearingCurrent else bearingDegrees
                     )
                 }
 
-                val nearby = cameraIndex.nearby(driverState.latitude, driverState.longitude)
-                setState { copy(nearbyCameraCount = nearby.size, nearbyCameras = nearby) }
+                val nearbyAll = cameraIndex.nearby(driverState.latitude, driverState.longitude)
+                val nearby = nearbyAll.filter { it.type.isVisibleTo(isPro) }
+                val locked = nearbyAll.size - nearby.size
+                setState { copy(nearbyCameraCount = nearby.size, nearbyCameras = nearby, lockedNearbyCount = locked) }
 
                 setState {
                     val alert = activeAlert
@@ -82,6 +129,10 @@ class DriveViewModel(
                 }
 
                 engine.evaluateDriverSafety(driverState) { camera, _, distanceMeters ->
+                    if (!camera.type.isVisibleTo(isPro)) return@evaluateDriverSafety
+                    if (!inForeground && alertsEnabled) {
+                        notifications.post(camera.id, camera.type, distanceMeters.toInt(), camera.placeName)
+                    }
                     setState {
                         copy(
                             activeAlert = ActiveAlert(

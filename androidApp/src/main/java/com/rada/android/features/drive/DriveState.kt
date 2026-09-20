@@ -21,12 +21,18 @@ data class DriveState(
     val nearbyCameras: List<SpeedCamera> = emptyList(),
     val currentLatitude: Double? = null,
     val currentLongitude: Double? = null,
+    val bearingDegrees: Float = 0f,
     val isLoading: Boolean = true,
-    val locationTakingTooLong: Boolean = false
+    val locationTakingTooLong: Boolean = false,
+    val gpsStale: Boolean = false,
+    val lockedNearbyCount: Int = 0
 ) : MviState
 
 sealed interface DriveIntent : MviIntent {
     data object StartTracking : DriveIntent
+    data object AppResumed : DriveIntent
+    data object AppPaused : DriveIntent
+    data class ProChanged(val isPro: Boolean) : DriveIntent
 }
 
 sealed interface DriveEffect : MviEffect {

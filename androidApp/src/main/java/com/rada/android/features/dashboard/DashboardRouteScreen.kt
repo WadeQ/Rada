@@ -11,12 +11,14 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.location.LocationServices
 import com.rada.android.data.FirestoreReportRepository
+import com.rada.android.data.TrialState
 import com.rada.android.data.UserProfilePreferences
 import com.rada.shared.location.AndroidLocationProvider
 
 @Composable
 fun DashboardRouteScreen(
     isPro: Boolean,
+    trial: TrialState,
     onDrive: () -> Unit,
     onReport: () -> Unit,
     onHelp: () -> Unit,
@@ -46,6 +48,7 @@ fun DashboardRouteScreen(
     DashboardContentScreen(
         state = state,
         isPro = isPro,
+        trial = trial,
         onDrive = onDrive,
         onReport = onReport,
         onHelp = onHelp,

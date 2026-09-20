@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,7 +28,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.rada.android.data.TrialPreferences
+import com.rada.android.data.TrialState
 import com.rada.android.features.dashboard.DashboardRouteScreen
+import kotlinx.coroutines.launch
 import com.rada.android.features.drive.DriveRouteScreen
 import com.rada.android.features.help.HelpRouteScreen
 import com.rada.android.features.login.LoginRouteScreen
@@ -52,6 +57,10 @@ private fun NavController.navigateToTab(route: String) {
 fun RadaNavHost() {
     val navController = rememberNavController()
     var isPro by remember { mutableStateOf(false) }
+    val appContext = LocalContext.current.applicationContext
+    val trialPrefs = remember { TrialPreferences(appContext) }
+    val trial by trialPrefs.state.collectAsState(initial = TrialState.Loading)
+    val trialScope = rememberCoroutineScope()
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val currentTab = when (currentRoute) {
@@ -162,6 +171,7 @@ fun RadaNavHost() {
             composable(RadaDestination.Dashboard.route) {
                 DashboardRouteScreen(
                     isPro = isPro,
+                    trial = trial,
                     onDrive = { navController.navigateToTab(RadaDestination.Drive.route) },
                     onReport = { navController.navigateToTab(RadaDestination.Report.route) },
                     onHelp = { navController.navigateToTab(RadaDestination.Help.route) },
@@ -190,6 +200,8 @@ fun RadaNavHost() {
 
                 DriveRouteScreen(
                     isPro = isPro,
+                    trial = trial,
+                    onStartTrial = { trialScope.launch { trialPrefs.startIfNeeded() } },
                     hasLocationPermission = hasLocationPermission,
                     onRequestPermission = { permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION) },
                     onHome = { navController.navigateToTab(RadaDestination.Dashboard.route) },

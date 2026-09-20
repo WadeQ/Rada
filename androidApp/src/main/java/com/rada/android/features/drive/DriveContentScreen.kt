@@ -2,6 +2,14 @@ package com.rada.android.features.drive
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,6 +52,8 @@ import com.rada.android.components.ShimmerBlock
 import com.rada.android.theme.RadaColors
 import com.rada.shared.domain.ReportType
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.MapsInitializer
+import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.CameraMoveStartedReason
@@ -114,6 +124,8 @@ fun DriveContentScreen(
                     ShimmerBlock(modifier = Modifier
                         .width(56.dp)
                         .height(32.dp))
+                } else if (state.gpsStale) {
+                    Text("--", color = RadaColors.TextMuted, fontSize = 38.sp, fontWeight = FontWeight.Bold)
                 } else {
                     val overLimit =
                         alert?.speedLimitKmh != null && state.currentSpeedKmh > alert.speedLimitKmh
@@ -124,7 +136,11 @@ fun DriveContentScreen(
                     )
                 }
                 Spacer(Modifier.height(4.dp))
-                Text("km/h current", color = RadaColors.TextMuted, fontSize = 10.5.sp)
+                Text(
+                    if (state.gpsStale) "Searching for GPS…" else "km/h current",
+                    color = if (state.gpsStale) RadaColors.Amber else RadaColors.TextMuted,
+                    fontSize = 10.5.sp
+                )
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
@@ -215,7 +231,7 @@ fun DriveContentScreen(
             DriveMap(state = state)
         }
         Spacer(Modifier.height(10.dp))
-        if (alert != null && alert.type == ReportType.ALCOBLOW) {
+        if ((alert != null && alert.type == ReportType.ALCOBLOW) || (!isPro && state.lockedNearbyCount > 0)) {
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -232,11 +248,11 @@ fun DriveContentScreen(
                 )
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    text = if (isPro) {
+                    text = if (isPro && alert != null) {
                         val place = alert.placeName?.let { "$it · " } ?: ""
                         "Alcoblow · $place${alert.distanceMeters} m ahead"
                     } else {
-                        "Alcohol check reported ${alert.distanceMeters} m ahead"
+                        "Checkpoint or alcohol check reported nearby"
                     },
                     color = RadaColors.TextSecondary,
                     fontSize = 11.5.sp,
@@ -266,7 +282,7 @@ fun DriveContentScreen(
                 Icon(Icons.Filled.Shield, contentDescription = null, tint = RadaColors.TextMuted)
                 Spacer(Modifier.width(10.dp))
                 Text(
-                    "Alcoblow alerts are a Pro feature — see checks reported by other drivers before you reach them.",
+                    "Checkpoint and alcohol-check alerts are a Pro feature — see checks reported by other drivers before you reach them.",
                     color = RadaColors.TextSecondary, fontSize = 11.5.sp,
                     modifier = Modifier.weight(1f)
                 )
@@ -310,30 +326,91 @@ private fun DriveMap(state: DriveState) {
         }
     }
 
-    GoogleMap(
-        modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState,
-        properties = MapProperties(isMyLocationEnabled = true),
-        uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = true),
-        onMyLocationButtonClick = {
-            following = true
-            true
+    val density = LocalDensity.current.density
+    var carIcon by remember { mutableStateOf<BitmapDescriptor?>(null) }
+    val appContext = LocalContext.current.applicationContext
+    LaunchedEffect(Unit) {
+        MapsInitializer.initialize(appContext)
+        carIcon = buildCarIcon(density)
+    }
+    val carState = remember { MarkerState(position = FALLBACK_CENTER) }
+    val glide = remember { Animatable(1f) }
+    var glideFrom by remember { mutableStateOf(FALLBACK_CENTER) }
+    var glideTo by remember { mutableStateOf(FALLBACK_CENTER) }
+    var placedOnce by remember { mutableStateOf(false) }
+
+    LaunchedEffect(state.currentLatitude, state.currentLongitude) {
+        val lat = state.currentLatitude ?: return@LaunchedEffect
+        val lng = state.currentLongitude ?: return@LaunchedEffect
+        val target = LatLng(lat, lng)
+        if (!placedOnce) {
+            placedOnce = true
+            glideFrom = target; glideTo = target
+            carState.position = target
+            return@LaunchedEffect
         }
-    ) {
-        state.nearbyCameras.forEach { camera ->
-            val typeLabel = when (camera.type) {
-                ReportType.CHECKPOINT -> "Police checkpoint"
-                ReportType.ALCOBLOW -> "Alcohol check"
-                ReportType.CAMERA -> "Speed camera"
+        glideFrom = carState.position
+        glideTo = target
+        glide.snapTo(0f)
+        glide.animateTo(1f, tween(GLIDE_MS, easing = LinearEasing)) {
+            val f = value.toDouble()
+            carState.position = LatLng(
+                glideFrom.latitude + (glideTo.latitude - glideFrom.latitude) * f,
+                glideFrom.longitude + (glideTo.longitude - glideFrom.longitude) * f
+            )
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            properties = MapProperties(isMyLocationEnabled = false),
+            uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = false)
+        ) {
+            state.nearbyCameras.forEach { camera ->
+                val typeLabel = when (camera.type) {
+                    ReportType.CHECKPOINT -> "Police checkpoint"
+                    ReportType.ALCOBLOW -> "Alcohol check"
+                    ReportType.CAMERA -> "Speed camera"
+                }
+                Marker(
+                    state = MarkerState(position = LatLng(camera.latitude, camera.longitude)),
+                    title = camera.placeName ?: typeLabel,
+                    snippet = typeLabel
+                )
             }
-            Marker(
-                state = MarkerState(position = LatLng(camera.latitude, camera.longitude)),
-                title = camera.placeName ?: typeLabel,
-                snippet = typeLabel
+            val icon = carIcon
+            if (placedOnce && icon != null) {
+                Marker(
+                    state = carState,
+                    icon = icon,
+                    flat = true,
+                    rotation = state.bearingDegrees,
+                    anchor = Offset(0.5f, 0.5f),
+                    zIndex = 10f
+                )
+            }
+        }
+        IconButton(
+            onClick = { following = true },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(10.dp)
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(RadaColors.Ink2)
+        ) {
+            Icon(
+                Icons.Filled.MyLocation,
+                contentDescription = "Recentre on my car",
+                tint = if (following) RadaColors.Accent else RadaColors.TextSecondary
             )
         }
     }
 }
+
+private const val GLIDE_MS = 900
 
 @Composable
 private fun PermissionNeededContent(modifier: Modifier, onRequestPermission: () -> Unit) {
