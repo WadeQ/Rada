@@ -1,0 +1,8 @@
+plugins {
+    id("com.android.application") version "8.13.2" apply false
+    id("com.android.library") version "8.13.2" apply false
+    kotlin("android") version "2.3.0" apply false
+    kotlin("multiplatform") version "2.3.0" apply false
+    kotlin("plugin.compose") version "2.3.0" apply false
+    id("com.google.gms.google-services") version "4.5.0" apply false
+}

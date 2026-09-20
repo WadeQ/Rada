@@ -1,0 +1,8 @@
+{
+  "images" : [
+    { "filename" : "LaunchTwiga.png",    "idiom" : "universal", "scale" : "1x" },
+    { "filename" : "LaunchTwiga@2x.png", "idiom" : "universal", "scale" : "2x" },
+    { "filename" : "LaunchTwiga@3x.png", "idiom" : "universal", "scale" : "3x" }
+  ],
+  "info" : { "author" : "xcode", "version" : 1 }
+}

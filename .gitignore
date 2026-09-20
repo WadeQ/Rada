@@ -1,0 +1,22 @@
+# Build output
+build/
+**/build/
+.gradle/
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Local machine config and secrets — never commit these
+local.properties
+androidApp/google-services.json
+androidApp/src/main/res/values/secrets.xml
+*.jks
+*.keystore
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xcuserstate
