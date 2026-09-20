@@ -1,9 +1,5 @@
 import SwiftUI
 
-/// The map here is a static placeholder — the real build should embed MapKit or a
-/// MapLibre/OSM-tile view (see the earlier discussion on why OSM beats Google Maps on cost
-/// for an always-on driving app). Kept simple since this skeleton's job is app structure and
-/// shared logic, not map SDK integration.
 struct DriveView: View {
     let isPro: Bool
     let onUnlockTapped: () -> Void
@@ -14,7 +10,6 @@ struct DriveView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Routine camera alert: amber (caution), not red — red is reserved for alcoblow.
             HStack {
                 Image(systemName: "camera.fill").foregroundColor(.radaAmberInk)
                 VStack(alignment: .leading) {
@@ -60,7 +55,6 @@ struct DriveView: View {
                 .padding(.horizontal, 18)
                 .padding(.vertical, 10)
 
-            // Pro-gated alcoblow teaser — free to report, paid to receive.
             Button(action: { if !isPro { onUnlockTapped() } }) {
                 HStack {
                     Image(systemName: "checkmark.shield.fill")

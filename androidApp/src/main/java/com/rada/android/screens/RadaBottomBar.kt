@@ -59,28 +59,21 @@ enum class RadaTab(val label: String, val icon: ImageVector) {
 
 private val BarHeight = 64.dp
 
-/** Space to leave beneath bottom-most content so the active circle, which rises above the bar, never covers it. */
 val BOTTOM_BAR_CLEARANCE = 34.dp
-private val Overshoot = 30.dp        // how far the active circle rises above the bar (overlaps content; takes no layout space)
+private val Overshoot = 30.dp
 private val NotchDepth = 30.dp
 private val CircleSize = 52.dp
-private val SidePadding = 28.dp      // keeps the notch clear of the bar's rounded ends
+private val SidePadding = 28.dp
 private val CornerRadius = 22.dp
 private val NotchHalfWidth = 38.dp
 
-/**
- * Dark floating bar with a concave notch under the active tab; the active icon sits in a
- * lime circle that slides between tabs. One instance lives under the NavHost so the circle
- * can animate across destinations instead of being redrawn per screen.
- */
 @Composable
 fun RadaBottomBar(
     selected: RadaTab,
     onSelect: (RadaTab) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
-    val barColor = if (dark) RadaPalette.DarkSurfaceVariant else Color(0xFF14181D)
+    val barColor = RadaColors.Burgundy
     val tabs = RadaTab.entries
 
     BoxWithConstraints(
@@ -99,7 +92,6 @@ fun RadaBottomBar(
         )
         val density = LocalDensity.current
 
-        // Notched bar
         Box(
             Modifier
                 .align(Alignment.BottomCenter)
@@ -108,7 +100,6 @@ fun RadaBottomBar(
                 .background(barColor, NotchedBarShape(with(density) { center.toPx() }, density))
         )
 
-        // Tab slots: icon for inactive tabs, label for the active one
         Row(
             Modifier
                 .align(Alignment.BottomCenter)
@@ -143,7 +134,6 @@ fun RadaBottomBar(
             }
         }
 
-        // Active circle
         Box(
             Modifier
                 .align(Alignment.TopStart)
@@ -159,7 +149,6 @@ fun RadaBottomBar(
     }
 }
 
-/** Rounded rectangle with a smooth U-shaped dip in the top edge centred on [centerX]. */
 private class NotchedBarShape(
     private val centerX: Float,
     density: Density

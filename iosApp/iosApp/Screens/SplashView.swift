@@ -1,23 +1,16 @@
 import SwiftUI
 
-/// Twiga launch screen. The Twiga sits exactly where the static launch screen draws it (centre
-/// of the screen, same size), so the handoff reads as one continuous screen; only the name and
-/// tagline fade in below it. Always ink, whatever the app theme.
-///
-/// The launch screen itself is configured in Info.plist (see SETUP.md): `UILaunchScreen` with
-/// `UIColorName = LaunchInk` and `UIImageName = LaunchTwiga`, both in Assets.xcassets.
 struct SplashView: View {
     let onFinished: () -> Void
     @State private var reveal: CGFloat
 
-    /// `initialReveal` exists so previews and render tests can show the finished state.
     init(initialReveal: CGFloat = 0, onFinished: @escaping () -> Void) {
         _reveal = State(initialValue: initialReveal)
         self.onFinished = onFinished
     }
 
-    static let markSize: CGFloat = 250      // must match LaunchTwiga.imageset's point size
-    static let lockupWidth: CGFloat = 130   // ~35pt wider than the Twiga on each side
+    static let markSize: CGFloat = 250
+    static let lockupWidth: CGFloat = 130
 
     var body: some View {
         ZStack {
@@ -43,9 +36,6 @@ struct SplashView: View {
     }
 }
 
-/// One line of text spread to exactly `width` by adjusting letter-spacing: measured at its
-/// natural width, then the difference is divided across the gaps. SwiftUI (unlike Compose) adds
-/// tracking after the last letter too, so the text is nudged back by half of it to stay centred.
 struct StretchedText: View {
     let text: String
     let width: CGFloat
@@ -64,7 +54,6 @@ struct StretchedText: View {
             .fixedSize()
             .offset(x: tracking / 2)
             .background(
-                // Hidden copy at natural width, purely to measure it.
                 Text(text).font(font).fixedSize().hidden()
                     .background(GeometryReader { geo in
                         Color.clear.preference(key: NaturalWidthKey.self, value: geo.size.width)

@@ -44,8 +44,6 @@ struct HelpView: View {
             }
             Spacer()
             Button(action: {
-                // NEEDS VERIFICATION: `tel:` URLs only dial on a real device, not the
-                // Simulator, and require the number to contain no spaces.
                 if let url = URL(string: "tel://\(contact.phone)") {
                     openURLExternally(url)
                 }

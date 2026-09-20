@@ -47,14 +47,6 @@ private val RadaLightScheme = lightColorScheme(
     onSurfaceVariant = RadaPalette.LightOnSurfaceVariant
 )
 
-/**
- * Now reads ThemePreferences instead of hardcoding dark — defaults to SYSTEM (standard
- * Android behavior: match the device setting) since ThemePreferences.themeMode already
- * resolves to SYSTEM when nothing's been explicitly chosen yet (see Preferences.kt). A user
- * can override to LIGHT or DARK from Settings; that choice persists via DataStore and this
- * composable picks it up live (collectAsState), so switching in Settings applies immediately
- * without restarting the app — no code here needs to change again for that to work.
- */
 @Composable
 fun RadaTheme(content: @Composable () -> Unit) {
     val context = LocalContext.current
@@ -68,8 +60,6 @@ fun RadaTheme(content: @Composable () -> Unit) {
         ThemeMode.DARK -> true
     }
 
-    // Edge-to-edge bar icons follow the phone's theme by default; keep them legible against the
-    // app's chosen theme (e.g. Light chosen in Settings while the phone is in dark mode).
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

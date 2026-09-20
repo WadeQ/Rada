@@ -1,11 +1,8 @@
 import SwiftUI
 
-/// Mirrors RadaApp.kt's flat-enum navigation: one "current screen" state, no NavigationStack.
-/// Swap for real navigation once flows need a back-stack.
 enum RadaScreen {
     case splash, onboarding, login, dashboard, drive, report, help, settings, paywall
 
-    /// Which tab is highlighted; nil hides the bar (splash, onboarding, login, report, paywall).
     var tab: RadaTab? {
         switch self {
         case .dashboard: return .home
@@ -20,8 +17,6 @@ enum RadaScreen {
 struct ContentView: View {
     @StateObject private var profile = ProfileStore()
     @State private var current: RadaScreen = .splash
-    // isPro mirrors the prototype's in-memory flag: no persistence, resets on relaunch.
-    // Replace with a real subscription-status check (StoreKit / RevenueCat) before ship.
     @State private var isPro: Bool = false
 
     var body: some View {
@@ -32,7 +27,6 @@ struct ContentView: View {
                 screen
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                // One bar under every tab screen, so the active circle can slide between tabs.
                 if let tab = current.tab {
                     RadaTabBar(selected: tab) { go(to: $0) }
                 }

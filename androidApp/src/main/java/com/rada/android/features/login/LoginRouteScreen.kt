@@ -36,7 +36,7 @@ fun LoginRouteScreen(
 
                 is LoginEffect.SignedInDirectly -> onSignedInDirectly()
                 is LoginEffect.NavigateToCompleteProfile -> onNavigateToCompleteProfile()
-                is LoginEffect.ShowError -> Unit // TODO: surface via SnackbarHost once Scaffold carries one app-wide
+                is LoginEffect.ShowError -> Unit
             }
         }
     }

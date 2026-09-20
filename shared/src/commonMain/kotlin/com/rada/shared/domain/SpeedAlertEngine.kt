@@ -8,12 +8,6 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-/**
- * The platform-agnostic core of the app: given a driver's location/speed and a nearby
- * camera list, decides when to fire an alert. Runs identically on Android and iOS since
- * it touches no platform APIs — only the location feed and the notification sink
- * (see LocationProvider / AlertNotifier) are platform-specific.
- */
 class SpeedAlertEngine(private var gridIndex: CameraGridIndex) {
     companion object {
         private const val EARTH_RADIUS_METERS = 6371000.0
@@ -76,7 +70,6 @@ class SpeedAlertEngine(private var gridIndex: CameraGridIndex) {
         }
     }
 
-    /** Speed-scaled alert distance, clamped to a sane floor/ceiling. Tune against real driving. */
     private fun computeAlertDistance(speedKmh: Double): Double {
         val speedMs = speedKmh / 3.6
         return (speedMs * REACTION_TIME_SECONDS)

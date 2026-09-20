@@ -9,12 +9,6 @@ import platform.UserNotifications.UNMutableNotificationContent
 import platform.UserNotifications.UNNotificationRequest
 import platform.UserNotifications.UNUserNotificationCenter
 
-/**
- * iOS implementation. Sets the audio session to `.playback` before posting so the alert
- * tone plays even with the silent switch on — otherwise UNUserNotificationCenter's sound is
- * suppressed exactly when a driver most needs it. NEEDS VERIFICATION: requires the
- * `audio` background mode and a bundled alert sound registered with the notification content.
- */
 class IosAlertNotifier : AlertNotifier {
 
     override fun triggerAlert(camera: SpeedCamera, currentSpeed: Double, distanceMeters: Double) {

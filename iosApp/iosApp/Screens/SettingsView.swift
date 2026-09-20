@@ -1,7 +1,6 @@
 import SwiftUI
 import PhotosUI
 
-/// Profile photo, name, preferences. Everything saves as it changes: there is no Save button.
 struct SettingsView: View {
     @EnvironmentObject private var profile: ProfileStore
     let onLogOut: () -> Void
@@ -34,7 +33,6 @@ struct SettingsView: View {
     }
 }
 
-/// The scrolling part of Settings, its own view so it can be rendered without a ScrollView.
 struct SettingsBody: View {
     @EnvironmentObject private var profile: ProfileStore
     @Environment(\.colorScheme) private var colorScheme
@@ -65,8 +63,6 @@ struct SettingsBody: View {
         }
     }
 
-    // MARK: Photo
-
     private var photoHeader: some View {
         VStack(spacing: 10) {
             PhotosPicker(selection: $pickerItem, matching: .images) {
@@ -90,8 +86,6 @@ struct SettingsBody: View {
         .frame(maxWidth: .infinity)
     }
 
-    // MARK: Name
-
     private var nameGroup: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -111,7 +105,6 @@ struct SettingsBody: View {
         }
     }
 
-    /// Saves shortly after typing stops; a blank name is flagged and never written.
     private func scheduleSave(_ value: String) {
         saveTask?.cancel()
         let trimmed = value.trimmingCharacters(in: .whitespaces)
@@ -123,8 +116,6 @@ struct SettingsBody: View {
             if trimmed != profile.name { profile.name = trimmed }
         }
     }
-
-    // MARK: Preferences
 
     private var darkOn: Bool {
         switch profile.themeMode {
@@ -139,7 +130,6 @@ struct SettingsBody: View {
             toggleRow(icon: "bell", title: "Alert notifications", subtitle: "Camera and checkpoint warnings",
                       isOn: Binding(get: { profile.alertsEnabled }, set: { profile.alertsEnabled = $0 }))
             Divider().padding(.leading, 52).opacity(0.5)
-            // Follows the phone until the user flips this; after that it's their explicit choice.
             toggleRow(icon: "moon", title: "Dark mode", subtitle: nil,
                       isOn: Binding(get: { darkOn }, set: { profile.themeMode = $0 ? .dark : .light }))
         }

@@ -51,13 +51,6 @@ import com.rada.shared.domain.ReportType
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * Categorical series colours, validated for colour-blind separation and contrast on the app's
- * card surface in both themes. Stack order is fixed (camera, checkpoint, alcohol), so the
- * pairs that touch are always camera/checkpoint and checkpoint/alcohol; yellow and red never
- * sit next to each other. The light-mode yellow is under 3:1 on white, so counts are always
- * shown as text in the legend, never by colour alone.
- */
 private fun seriesColor(type: ReportType, dark: Boolean): Color = when (type) {
     ReportType.CAMERA -> if (dark) Color(0xFFC98500) else Color(0xFFEDA100)
     ReportType.CHECKPOINT -> if (dark) Color(0xFF3987E5) else Color(0xFF2A78D6)
@@ -70,7 +63,6 @@ private fun typeLabel(type: ReportType) = when (type) {
     ReportType.ALCOBLOW -> "Alcohol"
 }
 
-/** Smallest even axis maximum that fits [value], so the mid gridline is a whole number. */
 private fun niceMax(value: Int): Int {
     val steps = intArrayOf(4, 6, 8, 10, 12, 16, 20, 30, 40, 50, 80, 100)
     return steps.firstOrNull { it >= value } ?: ((value + 49) / 50 * 50)
@@ -88,7 +80,6 @@ fun WeeklyReportsChart(bars: List<DayBar>, modifier: Modifier = Modifier) {
     var selected by rememberSaveable { mutableStateOf<Int?>(null) }
     val selectedDay = selected?.let { week.getOrNull(it) }
 
-    // Bars grow up from the baseline, staggered left to right, whenever the data changes.
     val progress = remember { Animatable(0f) }
     LaunchedEffect(week.map { it.counts }) {
         progress.snapTo(0f)
@@ -146,7 +137,6 @@ fun WeeklyReportsChart(bars: List<DayBar>, modifier: Modifier = Modifier) {
                 val gap = 2.dp.toPx()
                 val labelStyle = TextStyle(fontSize = 9.sp, color = mutedInk)
 
-                // Recessive grid: 0, half, max
                 for (tick in intArrayOf(0, axisMax / 2, axisMax)) {
                     val y = size.height - tick.toFloat() / axisMax * plotH
                     drawLine(
@@ -175,7 +165,6 @@ fun WeeklyReportsChart(bars: List<DayBar>, modifier: Modifier = Modifier) {
                         val h = max((day.counts.getValue(type).toFloat() / axisMax) * plotH, 3.dp.toPx()) * p
                         if (h <= 0f) return@forEachIndexed
                         val yTop = y - h
-                        // 2dp surface gap between stacked segments; only the top segment is rounded
                         val yBottom = y - if (k > 0) gap else 0f
                         val isTop = k == present.lastIndex
                         val r = if (isTop) min(4.dp.toPx(), (yBottom - yTop) / 2f) else 0f
@@ -226,7 +215,6 @@ fun WeeklyReportsChart(bars: List<DayBar>, modifier: Modifier = Modifier) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(seriesColor(type, dark)))
                     Spacer(Modifier.width(6.dp))
-                    // Text stays in ink; the swatch carries the colour identity
                     Text("${typeLabel(type)} $count", color = colors.onSurfaceVariant, fontSize = 12.sp)
                 }
             }

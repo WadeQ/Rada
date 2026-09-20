@@ -49,8 +49,6 @@ class DashboardViewModel(
             val location = locationProvider?.getLastKnownLocation()
             setState { copy(isLocationFiltered = location != null) }
 
-            // Alerts list and the weekly chart follow the same area rule: near the user when
-            // their location is known, everywhere otherwise.
             launch {
                 val alerts = if (location != null) {
                     reportRepository.observeNearbyReports(
@@ -72,7 +70,6 @@ class DashboardViewModel(
         }
     }
 
-    /** Buckets events into the last 7 calendar days (device time zone), oldest first. */
     private fun buildWeek(events: List<ReportEvent>): List<DayBar> {
         val today = LocalDate.now()
         val zone = ZoneId.systemDefault()
@@ -89,7 +86,5 @@ class DashboardViewModel(
     }
 
     override fun onIntent(intent: DashboardIntent) {
-        // No-op: DashboardIntent currently has no cases. See the contract file for what
-        // adding real data-loading would look like.
     }
 }

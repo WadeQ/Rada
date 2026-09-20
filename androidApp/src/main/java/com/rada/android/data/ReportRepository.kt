@@ -13,20 +13,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeoutOrNull
 
-/**
- * Firestore-backed: a report submitted by one user needs to reach every other user's Dashboard
- * AND Drive screen — that's the whole point of crowd-sourced reporting. Two read methods here
- * serve two different purposes: [observeRecentReports] is a history log for Dashboard (all
- * reports, however old); [observeActiveCameraReports] is the live set Drive's SpeedAlertEngine
- * actually checks against (recent-only — an alcoblow report from 3 hours ago is likely gone).
- *
- * NEEDS VERIFICATION: this reads/writes an open "reports" collection with no auth or App Check
- * enforcement configured on the Firestore security-rules side — fine while FIREBASE_ENABLED is
- * false in LoginViewModel (there's no real signed-in user to check against yet), but tighten
- * the rules to require authentication once that flag flips, or anyone can write arbitrary
- * reports into your database.
- */
-/** One submitted report, stripped to what charts need. */
 data class ReportEvent(
     val type: ReportType,
     val timestampMillis: Long,
@@ -35,7 +21,6 @@ data class ReportEvent(
 )
 
 interface ReportRepository {
-    /** Returns the new report's id so it can be undone with [deleteReport]. */
     suspend fun submitReport(
         type: ReportType,
         latitude: Double,
@@ -44,20 +29,12 @@ interface ReportRepository {
         placeName: String?
     ): Result<String>
 
-    /** Removes a report the user just submitted (the Undo action). */
     suspend fun deleteReport(id: String): Result<Unit>
 
-    /** History log for Dashboard — all reports, most recent first, no age filtering. */
     fun observeRecentReports(limit: Long = 5): Flow<List<MockData.RecentAlert>>
 
-    /** Live set for Drive's engine — only reports within [maxAgeMinutes], as real SpeedCamera
-     *  domain objects the shared SpeedAlertEngine/CameraGridIndex can use directly. */
     fun observeActiveCameraReports(maxAgeMinutes: Long = 60): Flow<List<SpeedCamera>>
 
-    /**
-     * Reports from the last [maxAgeDays] days (newest first, capped at [limit]) for charts.
-     * When [centerLat]/[centerLng] are given, only reports within [radiusKm] of that point.
-     */
     fun observeReportEvents(
         maxAgeDays: Long = 7,
         centerLat: Double? = null,
@@ -66,9 +43,6 @@ interface ReportRepository {
         limit: Long = 300
     ): Flow<List<ReportEvent>>
 
-    /** History log filtered to roughly [radiusKm] of (centerLat, centerLng) — an alcoblow
-     *  report in Mombasa isn't relevant to someone in Embakasi, and showing it anyway just
-     *  trains people to ignore the feed. */
     fun observeNearbyReports(
         centerLat: Double,
         centerLng: Double,
@@ -85,9 +59,6 @@ class FirestoreReportRepository(
 
     private val collection = firestore.collection("reports")
 
-    // Firestore queues writes locally and syncs when back online, but its Task only completes
-    // once the server acknowledges — awaiting it unbounded would hang the UI while offline.
-    // Failing fast (e.g. permission denied) surfaces as an error; a timeout means "queued".
     override suspend fun submitReport(
         type: ReportType,
         latitude: Double,
@@ -134,9 +105,6 @@ class FirestoreReportRepository(
                     val lat = doc.getDouble("latitude")
                     val lng = doc.getDouble("longitude")
                     val timestampMillis = doc.getTimestamp("timestamp")?.toDate()?.time
-                    // Prefers the geocoded name stored at submission time; falls back to raw
-                    // coordinates for documents submitted before that field existed, or if
-                    // geocoding failed for that particular report.
                     val storedPlaceName = doc.getString("placeName")
                     MockData.RecentAlert(
                         place = storedPlaceName ?: if (lat != null && lng != null) {
@@ -153,9 +121,6 @@ class FirestoreReportRepository(
 
     override fun observeActiveCameraReports(maxAgeMinutes: Long): Flow<List<SpeedCamera>> =
         callbackFlow {
-            // Capped at 100 docs server-side; the actual age filter is applied client-side below
-            // since Firestore would otherwise need a composite index for a range query combined
-            // with the existing orderBy.
             val query = collection.orderBy("timestamp", Query.Direction.DESCENDING).limit(100)
             val registration: ListenerRegistration = query.addSnapshotListener { snapshot, error ->
                 if (error != null || snapshot == null) {
@@ -177,10 +142,6 @@ class FirestoreReportRepository(
                         id = doc.id,
                         latitude = lat,
                         longitude = lng,
-                        // Crowd reports don't carry a known speed limit — SpeedAlertEngine already
-                        // treats speedLimit <= 0 as "no limit" for the UI (see DriveViewModel's
-                        // speedLimitKmh mapping), and checkpoint/alcoblow types trigger on
-                        // presence alone regardless of limit anyway.
                         speedLimit = 0.0,
                         bearing = bearing,
                         type = type,
@@ -200,8 +161,6 @@ class FirestoreReportRepository(
         radiusKm: Double,
         limit: Long
     ): Flow<List<ReportEvent>> = callbackFlow {
-        // Same approach as observeActiveCameraReports: newest-first capped fetch, age and
-        // distance filtered client-side so no composite index is needed.
         val query = collection.orderBy("timestamp", Query.Direction.DESCENDING).limit(limit)
         val registration: ListenerRegistration = query.addSnapshotListener { snapshot, error ->
             if (error != null || snapshot == null) {
@@ -232,11 +191,6 @@ class FirestoreReportRepository(
         radiusKm: Double,
         limit: Long
     ): Flow<List<MockData.RecentAlert>> = callbackFlow {
-        // NEEDS VERIFICATION / scale note: this fetches a capped recent batch and filters by
-        // distance client-side, rather than a true geo-indexed query (which would need a
-        // geohash scheme — Firestore has no native radius query). Fine at this app's current
-        // report volume; revisit if the "reports" collection grows into the thousands and
-        // this starts pulling more documents than it needs to just to filter most of them out.
         val query = collection.orderBy("timestamp", Query.Direction.DESCENDING).limit(50)
         val registration: ListenerRegistration = query.addSnapshotListener { snapshot, error ->
             if (error != null || snapshot == null) {
@@ -264,9 +218,6 @@ class FirestoreReportRepository(
         awaitClose { registration.remove() }
     }
 
-    // Duplicated from SpeedAlertEngine's private haversine calc rather than extracting a
-    // shared utility — small enough that the duplication is cheaper than the refactor right
-    // now; worth consolidating if a third caller ever needs the same math.
     private fun haversineKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
         val earthRadiusKm = 6371.0
         val dLat = Math.toRadians(lat2 - lat1)

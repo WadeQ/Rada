@@ -29,8 +29,6 @@ class SettingsViewModel(
             userProfilePreferences.userName.collect { name ->
                 val saved = name ?: ""
                 setState {
-                    // Don't overwrite what the user is mid-typing; only sync the field from
-                    // storage when no edit is pending (first load, or after sign-out clears it).
                     val typing = nameSaveJob?.isActive == true
                     copy(userName = saved, nameInput = if (typing) nameInput else saved)
                 }
@@ -69,7 +67,6 @@ class SettingsViewModel(
         }
     }
 
-    /** Saves shortly after the user stops typing. A blank name is flagged and never written. */
     private fun onNameChanged(value: String) {
         nameSaveJob?.cancel()
         val trimmed = value.trim()
@@ -88,10 +85,6 @@ class SettingsViewModel(
         viewModelScope.launch {
             nameSaveJob?.cancel()
             authRepository.signOut()
-            // Clearing the saved name matters beyond just this screen: Splash's returning-user
-            // check (see AuthConfig.FIREBASE_ENABLED) treats a saved name as "already signed
-            // up" while Firebase is stubbed off — leaving it in place after sign-out would mean
-            // the app skips straight past Login again on next launch, undoing the sign-out.
             userProfilePreferences.clearUserName()
             photoStore.delete()
             sendEffect(SettingsEffect.NavigateToLogin)

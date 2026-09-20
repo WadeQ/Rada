@@ -9,12 +9,6 @@ import androidx.core.app.NotificationCompat
 import com.rada.shared.domain.ReportType
 import com.rada.shared.domain.SpeedCamera
 
-/**
- * Android implementation. Plays a tone through the media stream in addition to posting a
- * notification — a plain Notification's sound is silenced by the ringer/DND state, which
- * defeats the purpose of a proximity alert. Waze/Google Maps do the same for turn-by-turn
- * audio; NEEDS VERIFICATION against a real alert .mp3 asset and channel setup on-device.
- */
 class AndroidAlertNotifier(
     private val context: Context,
     private val alertSoundResId: Int

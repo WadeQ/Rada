@@ -10,13 +10,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-/**
- * Photo-picker URIs are only temporarily readable, so the chosen image is copied into app
- * storage (square-cropped, downscaled) and the resulting path is what gets persisted.
- */
 class ProfilePhotoStore(private val context: Context) {
 
-    /** Returns the saved file's path, or null if the image couldn't be read. */
     suspend fun save(uri: Uri): String? = withContext(Dispatchers.IO) {
         runCatching {
             val resolver = context.contentResolver
@@ -42,7 +37,6 @@ class ProfilePhotoStore(private val context: Context) {
                 decoded, (decoded.width - side) / 2, (decoded.height - side) / 2, side, side, matrix, true
             )
 
-            // New file name each time so image caches keyed by path see the change.
             val dir = File(context.filesDir, "profile").apply { mkdirs() }
             dir.listFiles()?.forEach { it.delete() }
             val out = File(dir, "photo_${System.currentTimeMillis()}.jpg")

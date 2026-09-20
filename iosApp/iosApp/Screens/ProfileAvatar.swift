@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// The user's avatar wherever it appears: their uploaded photo when there is one, otherwise a
-/// lime disc with their initials. Home and Settings share this so they can't drift apart.
 struct ProfileAvatar: View {
     let name: String
     let photo: PlatformImage?

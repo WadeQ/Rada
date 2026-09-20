@@ -13,7 +13,6 @@ import platform.CoreLocation.CLLocationManagerDelegateProtocol
 import platform.CoreLocation.kCLLocationAccuracyBestForNavigation
 import platform.darwin.NSObject
 
-
 @OptIn(ExperimentalForeignApi::class)
 class IosLocationProvider(
     private val locationManager: CLLocationManager = CLLocationManager()

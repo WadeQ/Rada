@@ -19,12 +19,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.rada.android.theme.RadaColors
 
-/**
- * Self-contained Compose shimmer — no external library dependency, matching this project's
- * existing preference for hand-built Compose-primitive components over pulling in a library
- * for a fairly small visual effect (same reasoning as SlideToConfirm/NavItem). Reusable
- * anywhere a "this is loading" placeholder is needed, not tied to Drive specifically.
- */
 @Composable
 private fun rememberShimmerBrush(): Brush {
     val transition = rememberInfiniteTransition(label = "shimmer")
@@ -49,11 +43,6 @@ private fun rememberShimmerBrush(): Brush {
     )
 }
 
-/**
- * A single rounded-rect shimmer placeholder — size it via the modifier (width/height), same
- * as any other Box. Use this in place of a value's Text while its real value isn't known yet,
- * keeping static labels/captions around it as real text rather than shimmering everything.
- */
 @Composable
 fun ShimmerBlock(modifier: Modifier = Modifier, cornerRadius: Dp = 6.dp) {
     val brush = rememberShimmerBrush()

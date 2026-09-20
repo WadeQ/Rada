@@ -10,24 +10,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-/** Marker for a user action or system event a screen can handle. One sealed hierarchy per feature. */
 interface MviIntent
 
-/** Marker for a screen's renderable state. Should be an immutable data class, one per feature. */
 interface MviState
 
-/** Marker for a one-shot side effect (navigation, a toast, a snackbar) — never re-read from state. */
 interface MviEffect
 
-/**
- * Base ViewModel every feature extends. Mirrors the shape of this pattern generally (state
- * as a single StateFlow, intents in, effects out as one-shot events) without depending on any
- * specific proprietary base class — this is a from-scratch, generic version for this project.
- *
- * Route screens collect [state] and [effects]; Content screens are pure functions of
- * [State] -> Unit that emit [Intent]s upward. Route screens own navigation and Scaffold;
- * Content screens own layout only and take no ViewModel reference directly.
- */
 abstract class MviViewModel<Intent : MviIntent, State : MviState, Effect : MviEffect>(
     initialState: State
 ) : ViewModel() {
@@ -48,6 +36,5 @@ abstract class MviViewModel<Intent : MviIntent, State : MviState, Effect : MviEf
         viewModelScope.launch { _effects.send(effect) }
     }
 
-    /** Every feature implements this as the single entry point for user/system intents. */
     abstract fun onIntent(intent: Intent)
 }

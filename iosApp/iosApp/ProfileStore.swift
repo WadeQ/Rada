@@ -5,7 +5,6 @@ import UniformTypeIdentifiers
 enum ThemeMode: String, CaseIterable {
     case system, light, dark
 
-    /// nil means "follow the phone".
     var colorScheme: ColorScheme? {
         switch self {
         case .system: return nil
@@ -15,12 +14,6 @@ enum ThemeMode: String, CaseIterable {
     }
 }
 
-/// Local persistence for everything Android keeps in DataStore: the name, profile photo,
-/// alert and theme preferences, and the log of reports submitted from this device. Every
-/// change is written immediately; there is no save step. Cleared on sign-out (except the two
-/// preferences) so the next person on the phone doesn't inherit the profile.
-///
-/// iOS has no backend yet, so report history is purely local, same as Android's counter.
 final class ProfileStore: ObservableObject {
     private enum Key {
         static let name = "userName", alerts = "alertsEnabled", theme = "themeMode"
@@ -51,15 +44,12 @@ final class ProfileStore: ObservableObject {
         }
     }
 
-    /// Display name, falling back the way the Android home screen does.
     var displayName: String { name.trimmingCharacters(in: .whitespaces).isEmpty ? "Driver" : name }
 
     var reportsThisWeek: Int {
         let cutoff = Date().timeIntervalSince1970 - 7 * 24 * 3600
         return reportTimes.filter { $0 >= cutoff }.count
     }
-
-    // MARK: Reports
 
     @discardableResult
     func recordReport() -> TimeInterval {
@@ -75,10 +65,6 @@ final class ProfileStore: ObservableObject {
         defaults.set(reportTimes, forKey: Key.reports)
     }
 
-    // MARK: Photo
-
-    /// Square-crops and downsizes the picked image, then keeps an app-private copy: picker
-    /// results are only temporarily readable. The file name changes each time so caches see it.
     func setPhoto(from data: Data) {
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self, let jpeg = Self.squareJPEG(from: data) else { return }
@@ -110,7 +96,7 @@ final class ProfileStore: ObservableObject {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
         let options: [CFString: Any] = [
             kCGImageSourceCreateThumbnailFromImageAlways: true,
-            kCGImageSourceCreateThumbnailWithTransform: true,   // respects EXIF orientation
+            kCGImageSourceCreateThumbnailWithTransform: true,
             kCGImageSourceThumbnailMaxPixelSize: 640
         ]
         guard let scaled = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
@@ -122,8 +108,6 @@ final class ProfileStore: ObservableObject {
         CGImageDestinationAddImage(dest, square, [kCGImageDestinationLossyCompressionQuality: 0.9] as CFDictionary)
         return CGImageDestinationFinalize(dest) ? out as Data : nil
     }
-
-    // MARK: Sign-out
 
     func signOut() {
         name = ""

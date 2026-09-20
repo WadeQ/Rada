@@ -51,22 +51,15 @@ private fun NavController.navigateToTab(route: String) {
 @Composable
 fun RadaNavHost() {
     val navController = rememberNavController()
-    // isPro mirrors the prototype's in-memory flag — no persistence yet, resets on relaunch.
-    // Replace with a real subscription-status check once Paywall has a real payment backend
-    // (see PaymentRepository.kt) — Play Billing if this ever sells through Play, or a check
-    // against your own backend if selling directly via M-Pesa outside Play's billing system.
     var isPro by remember { mutableStateOf(false) }
 
-    // Root background: paints the whole screen with the theme's background color underneath
-    // every destination, and insets content so the bottom nav row and top content don't draw
-    // underneath the status/navigation bars under edge-to-edge.
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val currentTab = when (currentRoute) {
         RadaDestination.Dashboard.route -> RadaTab.Home
         RadaDestination.Drive.route -> RadaTab.Drive
         RadaDestination.Help.route -> RadaTab.Help
         RadaDestination.Settings.route -> RadaTab.Settings
-        else -> null // splash/onboarding/login/report/paywall don't show the tab bar
+        else -> null
     }
 
     Column(
@@ -178,12 +171,6 @@ fun RadaNavHost() {
             }
 
             composable(RadaDestination.Drive.route) {
-                // Location permission is requested here — the moment the user actually taps into
-                // the feature that needs it — rather than during onboarding, before they have any
-                // context for why the app wants it. Foreground-only for now (ACCESS_FINE_LOCATION);
-                // the ACCESS_BACKGROUND_LOCATION upgrade Android 11+ requires as a separate prompt
-                // is deferred to whenever background-driving-mode alerts actually get built, since
-                // asking for it before that exists would be the same "premature ask" problem again.
                 val context = LocalContext.current
                 var hasLocationPermission by remember {
                     mutableStateOf(
@@ -214,10 +201,6 @@ fun RadaNavHost() {
             }
 
             composable(RadaDestination.Report.route) {
-                // Checks current permission status only — doesn't eagerly re-prompt on entry,
-                // since Report is only reachable from Drive's nav bar, which already asked when
-                // the user first tapped into Drive. ReportViewModel asks lazily (on first tap of
-                // the Report button) if it turns out permission still isn't granted.
                 val context = LocalContext.current
                 var hasLocationPermission by remember {
                     mutableStateOf(
@@ -252,9 +235,6 @@ fun RadaNavHost() {
                     onReport = { navController.navigateToTab(RadaDestination.Report.route) },
                     onHelp = { navController.navigateToTab(RadaDestination.Help.route) },
                     onSignedOut = {
-                        // Full reset, not a lateral tab switch — clears the entire tab back stack
-                        // (Dashboard is the anchor every navigateToTab call pops up to, so popping
-                        // it inclusively clears everything under it too) and lands on a fresh Login.
                         navController.navigate(RadaDestination.Login.route) {
                             popUpTo(RadaDestination.Dashboard.route) { inclusive = true }
                         }

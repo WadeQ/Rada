@@ -34,19 +34,6 @@ import com.rada.android.theme.RadaColors
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-/**
- * The prototype's "slide to confirm" pattern, reused for both Login and the Paywall's trial
- * CTA. Chosen over a plain button because a drag takes more deliberate intent than a tap —
- * appropriate for a sign-in and a paid-trial start, and it matches an automotive interaction
- * language (slide-to-start) rather than the generic full-width SaaS button.
- *
- * [enabled] gates the drag gesture entirely and dims the control — added because Login was
- * lettable be slid with an empty phone field, which shouldn't be possible.
- *
- * NEEDS VERIFICATION: this drag-only implementation has no accessibility fallback (e.g. for
- * screen-reader or switch-control users) — production should add a long-press or double-tap
- * alternative path to the same onConfirm callback.
- */
 @Composable
 fun SlideToConfirm(
     label: String,
@@ -72,9 +59,6 @@ fun SlideToConfirm(
             .onSizeChanged { trackWidthPx = it.width.toFloat() }
     ) {
         val maxOffset = (trackWidthPx - handleSizePx - 8f).coerceAtLeast(0f)
-        // Dim the whole control when disabled, same as a disabled Button would be, so it
-        // visually reads as "not ready yet" rather than looking identical but silently
-        // refusing to respond to a drag.
         val disabledAlpha = if (enabled) 1f else 0.4f
 
         Box(
@@ -82,9 +66,6 @@ fun SlideToConfirm(
                 .fillMaxSize()
                 .background(
                     if (confirmed) RadaColors.Accent else RadaColors.Accent.copy(
-                        // Guard against maxOffset being 0 on the very first composition,
-                        // before onSizeChanged has fired — handleOffset.value / 0f is NaN,
-                        // and Color.copy(alpha = NaN) throws immediately.
                         alpha = (if (maxOffset > 0f) (handleOffset.value / maxOffset).coerceIn(0f, 1f) else 0f) * disabledAlpha
                     )
                 )

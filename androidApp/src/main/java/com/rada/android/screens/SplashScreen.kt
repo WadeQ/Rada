@@ -36,14 +36,8 @@ import com.rada.android.R
 import com.rada.android.theme.RadaPalette
 import kotlinx.coroutines.delay
 
-// Fixed ink regardless of the app's theme: the lime Twiga needs a dark ground, and the Android 12+
-// system splash that precedes this screen is the same ink (see values-v31/styles.xml).
 private val SplashInk = RadaPalette.DarkBackground
 
-/**
- * The Twiga sits exactly where the system splash draws it (centre of the screen, same size), so
- * the handoff reads as one continuous screen; only the name and tagline fade in below it.
- */
 @Composable
 fun SplashScreen(modifier: Modifier = Modifier, onFinished: () -> Unit) {
     LaunchedEffect(Unit) {
@@ -51,8 +45,6 @@ fun SplashScreen(modifier: Modifier = Modifier, onFinished: () -> Unit) {
         onFinished()
     }
 
-    // The ink ground needs light status/nav bar icons even when the app theme is light;
-    // restore whatever the theme had set once the splash leaves.
     val view = LocalView.current
     DisposableEffect(view) {
         val window = (view.context as? android.app.Activity)?.window
@@ -77,13 +69,8 @@ fun SplashScreen(modifier: Modifier = Modifier, onFinished: () -> Unit) {
         Image(
             painter = painterResource(R.drawable.ic_launcher_foreground),
             contentDescription = "Rada",
-            // Size and offset measured against the Android 12+ system splash so the Twiga does not
-            // jump or resize when this screen takes over.
             modifier = Modifier.size(LOGO_SIZE).offset(y = LOGO_OFFSET_Y)
         )
-        // The wordmark and caption are each stretched (via letter-spacing) to the same width,
-        // wider than the Twiga so they run past it on both sides, and centred on the Twiga's own
-        // visual centre (the giraffe sits ~1dp right of the screen centre).
         Column(
             Modifier
                 .align(Alignment.Center)
@@ -109,11 +96,6 @@ fun SplashScreen(modifier: Modifier = Modifier, onFinished: () -> Unit) {
     }
 }
 
-/**
- * Draws [text] as one line exactly [width] wide by measuring it and spreading the difference
- * across the gaps as letter-spacing (Compose adds none after the last letter, so the drawn
- * span really is [width] and stays centred).
- */
 @Composable
 private fun StretchedText(text: String, width: Dp, style: TextStyle) {
     val measurer = rememberTextMeasurer()
@@ -133,6 +115,6 @@ private fun StretchedText(text: String, width: Dp, style: TextStyle) {
 }
 
 private val LOGO_SIZE = 288.dp
-private val LOCKUP_WIDTH = 148.dp   // the Twiga is ~109dp wide, so this overhangs ~20dp each side
+private val LOCKUP_WIDTH = 148.dp
 private val LOGO_CENTER_X = 1.5.dp
 private val LOGO_OFFSET_Y = (-14).dp

@@ -1,13 +1,8 @@
 import Foundation
 
-/// Mirrors shared/src/commonMain/.../MockData.kt by value. In a fully wired build these
-/// would instead come from `import Shared` and read the Kotlin MockData object directly —
-/// duplicated here so this iOS target is self-contained and readable without requiring the
-/// built XCFramework. Replace both copies with a real repository before shipping.
 enum RadaMockData {
 
     struct RecentAlert { let place: String; let whenLabel: String; let type: ReportKind }
-    /// Mock until iOS has a backend; more than three so the "See all" toggle has something to do.
     static let recentAlerts = [
         RecentAlert(place: "Kilimani", whenLabel: "4 h ago", type: .camera),
         RecentAlert(place: "Embakasi", whenLabel: "4 h ago", type: .camera),
@@ -16,7 +11,6 @@ enum RadaMockData {
         RecentAlert(place: "Southern Bypass, Karen exit", whenLabel: "Yesterday", type: .camera)
     ]
 
-    /// Reports per day for the last 7 days, oldest first, split by type. Mock counts; labels are real.
     static func weeklyReports(now: Date = Date()) -> [DayBar] {
         let counts: [[ReportKind: Int]] = [
             [:],
@@ -64,7 +58,6 @@ enum ReportKind: String, CaseIterable {
     case checkpoint = "Checkpoint"
     case alcoblow = "Alcoblow"
 
-    /// How it's named to the driver.
     var title: String {
         switch self {
         case .camera: return "Speed camera"
@@ -74,7 +67,6 @@ enum ReportKind: String, CaseIterable {
     }
 }
 
-/// One day on the weekly chart: how many reports of each type were made that day.
 struct DayBar: Identifiable {
     let id: Int
     let label: String

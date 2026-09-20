@@ -18,7 +18,7 @@ fun PaywallRouteScreen(onTrialStarted: () -> Unit) {
         viewModel.effects.collect { effect ->
             when (effect) {
                 is PaywallEffect.NavigateToDashboard -> onTrialStarted()
-                is PaywallEffect.ShowError -> Unit // TODO: same SnackbarHost note as Login/Otp
+                is PaywallEffect.ShowError -> Unit
             }
         }
     }

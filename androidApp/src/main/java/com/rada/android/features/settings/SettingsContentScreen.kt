@@ -101,7 +101,6 @@ fun SettingsContentScreen(
                     onToggle = { onIntent(SettingsIntent.AlertsToggled(it)) }
                 )
                 RowDivider()
-                // Follows the phone's setting until the user flips this; after that it's their explicit choice.
                 val darkOn = when (state.themeMode) {
                     ThemeMode.DARK -> true
                     ThemeMode.LIGHT -> false
@@ -149,7 +148,6 @@ private fun GroupLabel(text: String) {
     )
 }
 
-/** Rounded surface that holds a stack of rows, like the grouped lists in the reference. */
 @Composable
 private fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
     Column(
@@ -210,7 +208,6 @@ private fun PhotoHeader(state: SettingsState, onPick: () -> Unit, onRemove: () -
     }
 }
 
-/** Edits apply on their own shortly after typing stops — there is no Save button to forget. */
 @Composable
 private fun NameGroup(state: SettingsState, onIntent: (SettingsIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme

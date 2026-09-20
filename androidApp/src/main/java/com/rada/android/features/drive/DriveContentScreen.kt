@@ -73,9 +73,6 @@ fun DriveContentScreen(
     }
 
     Column(modifier = modifier.fillMaxSize()) {
-        // Only shown when a camera or checkpoint is actually in range — the old version of
-        // this screen showed this permanently with a fake countdown. Alcoblow deliberately
-        // does NOT show here; it only surfaces through the red teaser below, same as before.
         val alert = state.activeAlert
         if (alert != null && alert.type != ReportType.ALCOBLOW) {
             Row(
@@ -218,9 +215,6 @@ fun DriveContentScreen(
             DriveMap(state = state)
         }
         Spacer(Modifier.height(10.dp))
-        // Real alcoblow alert — only when the engine actually detects one nearby. Real
-        // distance for both audiences; blurred + "Unlock" for non-Pro rather than hidden,
-        // since the underlying number is genuine, just illegible until they subscribe.
         if (alert != null && alert.type == ReportType.ALCOBLOW) {
             Row(
                 Modifier
@@ -259,11 +253,6 @@ fun DriveContentScreen(
             }
             Spacer(Modifier.height(BOTTOM_BAR_CLEARANCE))
         } else if (!isPro) {
-            // No real alert active right now, but a free user should still be able to
-            // discover this feature exists — without a real event to blur, this is
-            // deliberately generic marketing copy, never a specific fabricated distance.
-            // The old prototype solved discoverability by faking a permanent demo alert;
-            // this solves the same problem honestly instead.
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -295,8 +284,6 @@ fun DriveContentScreen(
     }
 }
 
-// Where the map sits before the first GPS fix — the app is Kenya-focused, and the default
-// camera (0,0) shows a zoomed-out world map until a fix arrives.
 private val FALLBACK_CENTER = LatLng(-1.2864, 36.8172)
 private const val FOLLOW_ZOOM = 15f
 
@@ -306,7 +293,6 @@ private fun DriveMap(state: DriveState) {
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(FALLBACK_CENTER, 11f)
     }
-    // Follow the driver until they pan the map themselves; the my-location button resumes it.
     var following by remember { mutableStateOf(true) }
 
     LaunchedEffect(cameraPositionState) {
@@ -331,7 +317,7 @@ private fun DriveMap(state: DriveState) {
         uiSettings = MapUiSettings(zoomControlsEnabled = false, myLocationButtonEnabled = true),
         onMyLocationButtonClick = {
             following = true
-            true // handled: the effect above recentres, at the driving zoom
+            true
         }
     ) {
         state.nearbyCameras.forEach { camera ->

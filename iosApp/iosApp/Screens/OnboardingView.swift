@@ -34,9 +34,6 @@ struct OnboardingView: View {
             Spacer()
             let current = obSteps[step]
             if step == 0 {
-                // Step 1 gets the fuller illustration — highest-value screen in onboarding,
-                // needs the space a full scene gives it. Steps 2/3 stay as simple icons since
-                // they're abstract concepts (privacy, permissions), not a literal scene.
                 OnboardingCameraAlertIllustration()
                     .frame(maxWidth: 260)
                     .padding(.bottom, 4)

@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Same giraffe as the colour foreground, as a single shape. Android 13+ tints this for
-     themed icons using only its alpha, so colour is irrelevant. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
@@ -37,7 +35,6 @@
             android:pivotX="65"
             android:pivotY="33"
             android:rotation="14">
-            <!-- head, ring hole, solid lens glass, pupil hole -->
             <path
                 android:fillColor="#FF000000"
                 android:fillType="evenOdd"

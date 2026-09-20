@@ -8,7 +8,6 @@ struct DashboardView: View {
     @State private var animatedFines: Double = 0
     @State private var showAllAlerts = false
 
-    /// `initialFines` lets previews and render tests show the finished counter.
     init(isPro: Bool, onUpgrade: @escaping () -> Void, initialFines: Double = 0) {
         self.isPro = isPro
         self.onUpgrade = onUpgrade
@@ -30,7 +29,6 @@ struct DashboardView: View {
         }
     }
 
-    /// The scrolling body, separate from the ScrollView so it can be rendered on its own.
     var scrollContent: some View {
         VStack(alignment: .leading, spacing: 0) {
             finesCard
@@ -52,9 +50,12 @@ struct DashboardView: View {
 
     private var header: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(greeting).font(.system(size: 12)).foregroundColor(.radaTextSecondary)
-                Text(profile.displayName).font(.system(size: 16, weight: .medium)).foregroundColor(.radaTextPrimary)
+                Text(profile.displayName)
+                    .font(.system(size: 16, weight: .medium)).foregroundColor(.white)
+                    .padding(.horizontal, 12).padding(.vertical, 4)
+                    .background(Capsule().fill(Color.radaBurgundy))
             }
             Spacer()
             ProfileAvatar(name: profile.displayName, photo: profile.photo, size: 36, initialsCount: 2)
@@ -72,8 +73,6 @@ struct DashboardView: View {
         .background(RoundedRectangle(cornerRadius: 22).fill(Color.radaInk2))
     }
 
-    /// A compact banner, above the alerts, so the Upgrade button never depends on how many
-    /// alerts there are.
     private var proBanner: some View {
         HStack(spacing: 10) {
             Image(systemName: "checkmark.shield.fill").foregroundColor(.radaAccentText)
@@ -115,7 +114,6 @@ struct DashboardView: View {
                     .buttonStyle(RadaPressStyle())
                 }
             }
-            // Only the newest few show by default so the list stays short; the rest expand inline.
             ForEach(Array(alerts.enumerated()), id: \.offset) { index, alert in
                 if index < Self.collapsedAlertCount || showAllAlerts {
                     AlertRow(alert: alert)

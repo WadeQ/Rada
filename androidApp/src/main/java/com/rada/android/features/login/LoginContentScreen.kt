@@ -23,12 +23,6 @@ import androidx.compose.ui.unit.sp
 import com.rada.android.screens.OnboardingCameraAlertIllustration
 import com.rada.android.screens.SlideToConfirm
 
-/**
- * Pure content: takes [state], emits [LoginIntent]s upward, knows nothing about the
- * ViewModel, Scaffold, or navigation. Firebase's Activity-dependent submit() call and
- * navigation both live in LoginRouteScreen — this file should stay unit-testable with a
- * fake state and a no-op lambda.
- */
 @Composable
 fun LoginContentScreen(
     state: LoginState,

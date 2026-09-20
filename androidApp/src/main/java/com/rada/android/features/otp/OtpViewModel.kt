@@ -19,7 +19,7 @@ class OtpViewModel(
         when (intent) {
             is OtpIntent.CodeChanged -> setState { copy(code = intent.value, errorMessage = null) }
             is OtpIntent.VerifyTapped -> verify()
-            is OtpIntent.ResendTapped -> Unit // TODO: re-trigger LoginViewModel.submit — needs the Route screen to own both ViewModels or a shared auth-flow ViewModel; not wired in this pass
+            is OtpIntent.ResendTapped -> Unit
         }
     }
 
@@ -33,8 +33,6 @@ class OtpViewModel(
             when (val result = authRepository.verifyOtp(verificationId, currentState.code)) {
                 is SignInResult.Success -> {
                     setState { copy(isVerifying = false) }
-                    // Same one-time-only name check as LoginViewModel's stub path — a first
-                    // sign-in via real OTP still needs a name before landing on Dashboard.
                     val name = userProfilePreferences.userName.first()
                     sendEffect(
                         if (name.isNullOrBlank()) OtpEffect.NavigateToCompleteProfile

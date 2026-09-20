@@ -24,13 +24,8 @@ enum RadaTab: CaseIterable {
     }
 }
 
-/// Space to leave beneath a screen's last content so the active circle, which rises above the
-/// bar, never covers it.
 let bottomBarClearance: CGFloat = 34
 
-/// Dark floating bar with a concave notch under the active tab; the active icon sits in a lime
-/// circle that slides between tabs. One instance lives under the screen switcher so the circle
-/// can animate across destinations. Same geometry as Android's RadaBottomBar.
 struct RadaTabBar: View {
     let selected: RadaTab
     let onSelect: (RadaTab) -> Void
@@ -40,7 +35,7 @@ struct RadaTabBar: View {
     private let circleSize: CGFloat = 52
     private let sidePadding: CGFloat = 28
 
-    private let barColor = Color.adaptive(light: 0x14181D, dark: 0x262E38)
+    private let barColor = Color.radaBurgundy
 
     var body: some View {
         GeometryReader { geo in
@@ -83,7 +78,6 @@ struct RadaTabBar: View {
                 .padding(.horizontal, sidePadding)
                 .frame(height: barHeight)
 
-                // Active circle, rising out of the notch
                 Circle()
                     .fill(Color.radaAccent)
                     .frame(width: circleSize, height: circleSize)
@@ -105,7 +99,6 @@ struct RadaTabBar: View {
     }
 }
 
-/// Rounded rectangle with a smooth U-shaped dip in the top edge centred on `centerX`.
 struct NotchedBarShape: Shape {
     var centerX: CGFloat
     private let corner: CGFloat = 22

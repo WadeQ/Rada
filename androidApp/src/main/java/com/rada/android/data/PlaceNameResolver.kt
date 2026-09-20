@@ -7,7 +7,6 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 
 interface PlaceNameResolver {
-    /** Null on any failure — caller falls back to showing raw coordinates rather than "null". */
     suspend fun resolve(latitude: Double, longitude: Double): String?
 }
 

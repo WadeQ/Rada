@@ -42,7 +42,6 @@ class ReportViewModel(
     }
 
     private fun report(type: ReportType) {
-        // One report in flight at a time — ignores double-taps while a fix/save is pending.
         if (currentState.submittingType != null) return
         if (!currentState.hasLocationPermission) {
             sendEffect(ReportEffect.RequestLocationPermission)
@@ -65,7 +64,6 @@ class ReportViewModel(
                 return@launch
             }
 
-            // A slow geocoder shouldn't hold up the confirmation; the report just goes without a name.
             val placeName = withTimeoutOrNull(GEOCODE_TIMEOUT_MS) {
                 placeNameResolver.resolve(driverState.latitude, driverState.longitude)
             }
@@ -104,7 +102,6 @@ class ReportViewModel(
         viewModelScope.launch {
             history.remove(report.token)
             reportRepository.deleteReport(report.id).onFailure {
-                // The report is already live for other drivers; be honest that it wasn't removed.
                 setState { copy(submissionError = "Couldn't undo — the report is still live.") }
             }
         }

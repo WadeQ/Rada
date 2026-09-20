@@ -1,11 +1,5 @@
 import SwiftUI
 
-/// Native re-implementation of the onboarding hero illustration, mirroring
-/// OnboardingCameraAlertIllustration.kt exactly in content and timing. A GIF would have meant
-/// a blurry, unthemeable raster asset, so this redraws the same scene with SwiftUI shapes and
-/// animates it with SwiftUI's own animation system instead. Coordinates are defined in the
-/// same 380x260 "design units" as the original SVG/Compose versions and scaled via
-/// GeometryReader, so all three stay easy to compare against each other.
 struct OnboardingCameraAlertIllustration: View {
     @State private var carOffsetX: CGFloat = -190
     @State private var idleBob = false
@@ -32,7 +26,6 @@ struct OnboardingCameraAlertIllustration: View {
                         .position(x: (lx + 13) * scale, y: 199 * scale)
                 }
 
-                // Camera pole
                 Rectangle().fill(Color(hex: 0x4B5563)).frame(width: 6 * scale, height: 60 * scale)
                     .position(x: 301 * scale, y: 138 * scale)
                 RoundedRectangle(cornerRadius: 6 * scale).fill(Color(hex: 0x333B46))
@@ -45,17 +38,14 @@ struct OnboardingCameraAlertIllustration: View {
                 Circle().fill(Color(hex: 0xE5484D)).frame(width: 6 * scale, height: 6 * scale)
                     .position(x: 302 * scale, y: 107 * scale)
 
-                // Radar arcs — dash phase animates via strokeStyle dashPhase to suggest travel.
                 radarArc(from: CGPoint(x: 158, y: 168), control: CGPoint(x: 220, y: 150), to: CGPoint(x: 278, y: 118), scale: scale)
                     .opacity(arcPulse ? 0.15 : 0.9)
                 radarArc(from: CGPoint(x: 158, y: 178), control: CGPoint(x: 215, y: 168), to: CGPoint(x: 272, y: 132), scale: scale)
                     .opacity(arcPulse ? 0.15 : 0.5)
 
-                // Car — entrance offset + idle bob
                 carGroup(scale: scale)
                     .offset(x: carOffsetX * scale, y: idleBob ? -2 * scale : 0)
 
-                // Popup
                 popupGroup(scale: scale)
                     .opacity(popupVisible ? 1 : 0)
                     .scaleEffect(popupVisible ? 1 : 0.7)

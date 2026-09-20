@@ -37,7 +37,7 @@ import com.rada.android.theme.RadaColors
 
 private data class ObStep(
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
-    val tint: androidx.compose.ui.graphics.Color?, // null = theme primary
+    val tint: androidx.compose.ui.graphics.Color?,
     val title: String,
     val body: String
 )

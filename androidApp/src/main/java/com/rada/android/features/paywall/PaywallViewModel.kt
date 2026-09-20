@@ -27,9 +27,6 @@ class PaywallViewModel(
 
             is PaywallIntent.PayTapped -> startPayment()
             is PaywallIntent.RestoreTapped -> {
-                // TODO: a real implementation checks subscription status against your backend
-                // (or Play Billing, if this ever also sells through Play). Not built — there's
-                // no backend yet for it to check against.
                 sendEffect(PaywallEffect.ShowError("Restore isn't available yet."))
             }
         }
@@ -77,12 +74,6 @@ class PaywallViewModel(
         }
     }
 
-    /**
-     * Polls rather than waiting for a push/websocket notification — simpler to reason about
-     * for a first version, at the cost of a short delay after the user actually completes
-     * payment on their phone before the app notices. A real build would ideally have the
-     * backend push a Firestore/websocket update instead of the app polling it.
-     */
     private suspend fun pollForCompletion(checkoutReference: String) {
         repeat(10) {
             delay(3000)
@@ -105,7 +96,7 @@ class PaywallViewModel(
                     return
                 }
 
-                is PaymentStatus.Pending -> Unit // keep polling
+                is PaymentStatus.Pending -> Unit
             }
         }
         setState {

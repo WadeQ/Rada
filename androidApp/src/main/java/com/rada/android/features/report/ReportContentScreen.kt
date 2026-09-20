@@ -106,7 +106,6 @@ fun ReportContentScreen(
     val colors = MaterialTheme.colorScheme
     val view = LocalView.current
 
-    // Confirmation / rejection haptics, so a report is felt without looking at the screen.
     LaunchedEffect(state.lastReport?.token) { if (state.lastReport != null) view.confirmHaptic() }
     LaunchedEffect(state.submissionError) { if (state.submissionError != null) view.rejectHaptic() }
 
@@ -180,7 +179,6 @@ fun ReportContentScreen(
     }
 }
 
-/** Slides and fades each child in on first composition, offset by [index] for a cascade. */
 @Composable
 private fun StaggerIn(index: Int, content: @Composable () -> Unit) {
     val progress = remember { Animatable(0f) }
@@ -204,7 +202,6 @@ private fun ReportTile(type: ReportType, state: ReportState, onTap: () -> Unit) 
     val busy = state.submittingType != null
     val token = state.lastReport?.takeIf { it.type == type }?.token
 
-    // Success look lasts a moment, then the tile settles back; the Undo chip outlives it.
     var showSuccess by remember { mutableStateOf(false) }
     LaunchedEffect(token) {
         if (token == null) {
@@ -260,14 +257,10 @@ private fun ReportTile(type: ReportType, state: ReportState, onTap: () -> Unit) 
             .background(colors.surface)
             .drawBehind {
                 val center = Offset(20.dp.toPx() + 28.dp.toPx(), size.height / 2f)
-                // Colour floods out from the icon on success…
                 if (fill > 0f) {
                     drawCircle(spec.fill, radius = hypot(size.width, size.height) * fill, center = center)
                 }
-                // …while rings ripple outward, like a radar ping.
                 for (i in 0..2) {
-                    // Scaled so the last (most delayed) ring also reaches p = 1 when burst does;
-                    // otherwise it would stay frozen mid-expansion after the animation ends.
                     val p = ((burst.value * 1.36f - i * 0.18f) / 0.82f).coerceIn(0f, 1f)
                     if (p > 0f && p < 1f) {
                         drawCircle(
@@ -332,7 +325,6 @@ private fun ReportTile(type: ReportType, state: ReportState, onTap: () -> Unit) 
     }
 }
 
-/** A checkmark that draws itself in as [progress] goes 0 → 1. */
 @Composable
 private fun AnimatedCheck(progress: Float, color: Color, modifier: Modifier = Modifier) {
     Canvas(modifier) {
@@ -358,7 +350,6 @@ private fun ImpactChip(count: Int) {
     val colors = MaterialTheme.colorScheme
     val shown by animateIntAsState(count, tween(600), label = "impactCount")
 
-    // Pops when the number goes up (not on first display).
     val pop = remember { Animatable(1f) }
     var last by remember { mutableStateOf(count) }
     LaunchedEffect(count) {
@@ -394,11 +385,9 @@ private fun ImpactChip(count: Int) {
     }
 }
 
-/** "Camera reported · Undo" with a ring that drains over [UNDO_WINDOW_MS]. */
 @Composable
 private fun UndoChip(report: SubmittedReport?, onUndo: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    // Keeps the last report around so the chip can animate out instead of vanishing.
     val displayed by produceState<SubmittedReport?>(null, report) { if (report != null) value = report }
 
     AnimatedVisibility(

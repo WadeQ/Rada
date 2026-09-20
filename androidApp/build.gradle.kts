@@ -16,7 +16,6 @@ android {
     defaultConfig {
         applicationId = "com.rada.android"
         minSdk = 26
-        //noinspection OldTargetApi
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -55,7 +54,6 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.android.gms:play-services-location:21.3.0")
-    // .await() extension used on Firebase Tasks in AuthRepository.kt.
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
     implementation("com.google.maps.android:maps-compose:6.12.2")
     debugImplementation("androidx.compose.ui:ui-tooling")

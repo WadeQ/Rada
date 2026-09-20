@@ -1,6 +1,4 @@
 <resources>
-    <!-- Android 12+ draws its own splash (the launcher icon on this colour) before our first
-         frame; using the app's ink keeps it continuous with the in-app splash that follows. -->
     <style name="Theme.Rada" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/ic_launcher_background</item>
         <item name="android:windowSplashScreenBackground">@color/ic_launcher_background</item>

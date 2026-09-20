@@ -35,7 +35,7 @@ fun OtpRouteScreen(
             when (effect) {
                 is OtpEffect.NavigateToDashboard -> onVerified()
                 is OtpEffect.NavigateToCompleteProfile -> onNavigateToCompleteProfile()
-                is OtpEffect.ShowError -> Unit // TODO: same SnackbarHost note as LoginRouteScreen
+                is OtpEffect.ShowError -> Unit
             }
         }
     }

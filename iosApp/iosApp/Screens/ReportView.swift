@@ -1,9 +1,5 @@
 import SwiftUI
 
-/// One-tap reporting: all three types on screen, one tap reports. On success the tapped tile
-/// floods with its colour from the icon, ripples outward and draws a checkmark, and an Undo chip
-/// with a draining ring stays for five seconds. Reports are only logged locally here (there is
-/// no iOS backend yet), which is what feeds the "this week" counter.
 struct ReportView: View {
     @EnvironmentObject private var profile: ProfileStore
     let onDone: () -> Void
@@ -77,15 +73,12 @@ struct ReportView: View {
         }
     }
 
-    // MARK: Flow
-
     private func report(_ kind: ReportKind) {
         guard submitting == nil else { return }
         Haptics.tick()
         undoTask?.cancel()
         withAnimation(.easeOut(duration: 0.2)) { undoable = nil; success = nil; submitting = kind }
         Task { @MainActor in
-            // Stands in for "get a GPS fix, save the report" until iOS has a backend.
             try? await Task.sleep(nanoseconds: 1_100_000_000)
             let token = profile.recordReport()
             Haptics.success()
@@ -112,8 +105,6 @@ struct ReportView: View {
         profile.removeReport(item.token)
         withAnimation(.easeIn(duration: 0.25)) { undoable = nil; success = nil }
     }
-
-    // MARK: Pieces
 
     private var impactChip: some View {
         let count = profile.reportsThisWeek
@@ -152,8 +143,6 @@ struct ReportView: View {
     }
 }
 
-// MARK: - Tile
-
 private struct TileSpec {
     let fill: Color, ink: Color, icon: String, sub: String
 }
@@ -168,17 +157,14 @@ private func spec(_ kind: ReportKind) -> TileSpec {
 
 private func ease(_ x: Double) -> Double { 1 - pow(1 - min(max(x, 0), 1), 3) }
 
-/// Success animation as a pure function of seconds since the report succeeded.
 private enum SuccessTiming {
     static let visibleFor = 2.2
-    /// 0...1: how far the colour has flooded the tile.
     static func fill(_ e: Double) -> Double {
         if e < 0 { return 0 }
         if e < 0.45 { return ease(e / 0.45) }
         if e < visibleFor { return 1 }
         return 1 - ease((e - visibleFor) / 0.3)
     }
-    /// 0...1: how much of the checkmark has been drawn.
     static func check(_ e: Double) -> Double {
         if e < 0.26 { return 0 }
         if e < visibleFor { return ease((e - 0.26) / 0.38) }
@@ -186,7 +172,6 @@ private enum SuccessTiming {
     }
 }
 
-/// Rotating arc, drawn in SwiftUI so it looks identical everywhere (and matches Android's).
 private struct ArcSpinner: View {
     let color: Color
     var body: some View {
@@ -220,7 +205,6 @@ struct ReportTile: View {
     private let height: CGFloat = 100
 
     var body: some View {
-        // Runs only while a success animation is playing.
         TimelineView(.animation(paused: successStart == nil)) { context in
             content(elapsed: successStart.map { context.date.timeIntervalSince($0) } ?? -1)
         }
@@ -236,7 +220,6 @@ struct ReportTile: View {
             ZStack(alignment: .leading) {
                 RoundedRectangle(cornerRadius: 26).fill(Color.radaInk2)
 
-                // Colour floods out from the icon, and rings ripple outward like a ping.
                 Canvas { ctx, size in
                     let center = CGPoint(x: 48, y: size.height / 2)
                     if fill > 0 {

@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,13 +66,17 @@ fun DashboardContentScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(state.greeting, color = RadaColors.TextSecondary, fontSize = 12.sp)
                 Text(
                     state.userName,
-                    color = RadaColors.TextPrimary,
+                    color = Color.White,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(RadaColors.Burgundy)
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
                 )
             }
             ProfileAvatar(
@@ -150,8 +155,6 @@ fun DashboardContentScreen(
             }
             Spacer(Modifier.height(20.dp))
 
-            // Only the newest few alerts show by default so the list stays short; the rest
-            // expand inline via "See all".
             var showAllAlerts by rememberSaveable { mutableStateOf(false) }
             val hasMoreAlerts = state.recentAlerts.size > COLLAPSED_ALERT_COUNT
 

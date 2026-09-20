@@ -23,11 +23,6 @@ import com.rada.android.theme.RadaColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/**
- * The user's avatar everywhere it appears: their uploaded photo when there is one, otherwise a
- * lime disc with their initials. Decoding happens off the main thread and is keyed on the file
- * path, which changes whenever a new photo is saved (see ProfilePhotoStore).
- */
 @Composable
 fun ProfileAvatar(
     name: String,

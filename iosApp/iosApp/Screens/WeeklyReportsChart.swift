@@ -1,10 +1,5 @@
 import SwiftUI
 
-/// Categorical series colours, validated for colour-blind separation and contrast on the card
-/// surface in both themes (same values as Android). Stack order is fixed (camera, checkpoint,
-/// alcohol) so the pairs that touch are camera/checkpoint and checkpoint/alcohol; yellow and red
-/// never sit side by side. The light-mode yellow is under 3:1 on white, so counts always appear
-/// as text in the legend, never by colour alone.
 private func seriesColor(_ kind: ReportKind) -> Color {
     switch kind {
     case .camera: return .adaptive(light: 0xEDA100, dark: 0xC98500)
@@ -21,12 +16,10 @@ private func legendName(_ kind: ReportKind) -> String {
     }
 }
 
-/// Smallest even axis maximum that fits `value`, so the mid gridline is a whole number.
 private func niceMax(_ value: Int) -> Int {
     [4, 6, 8, 10, 12, 16, 20, 30, 40, 50, 80, 100].first { $0 >= value } ?? ((value + 49) / 50 * 50)
 }
 
-/// Rectangle with only the top corners rounded, for the top segment of a stacked bar.
 private struct TopRoundedRect: Shape {
     var radius: CGFloat
     func path(in rect: CGRect) -> Path {
@@ -43,8 +36,6 @@ private struct TopRoundedRect: Shape {
     }
 }
 
-/// Reports per day for the last 7 days as stacked bars split by type, with tap-to-inspect and a
-/// legend that always carries the counts.
 struct WeeklyReportsChart: View {
     let bars: [DayBar]
 
@@ -99,7 +90,6 @@ struct WeeklyReportsChart: View {
                 ForEach(ReportKind.allCases, id: \.self) { kind in
                     HStack(spacing: 6) {
                         RoundedRectangle(cornerRadius: 3).fill(seriesColor(kind)).frame(width: 10, height: 10)
-                        // Text stays in ink; the swatch carries the colour identity
                         Text("\(legendName(kind)) \(count(for: kind))")
                             .font(.system(size: 12)).foregroundColor(.radaTextSecondary)
                     }
@@ -129,7 +119,6 @@ struct WeeklyReportsChart: View {
         let top: CGFloat = 8
         let plotH = plotHeight - top
         return ZStack(alignment: .bottomLeading) {
-            // Recessive grid: 0, half, max
             ForEach([0, axisMax / 2, axisMax], id: \.self) { tick in
                 let y = CGFloat(tick) / CGFloat(axisMax) * plotH
                 Rectangle()
@@ -160,12 +149,11 @@ struct WeeklyReportsChart: View {
         }
     }
 
-    /// One day's bar: segments stacked bottom-up in fixed order, 2pt gaps, top one rounded.
     private func stack(for day: DayBar, plotH: CGFloat) -> some View {
         let present = ReportKind.allCases.filter { (day.counts[$0] ?? 0) > 0 }
         let dim = (selected != nil && selected != day.id) ? 0.45 : 1.0
         return VStack(spacing: gap) {
-            ForEach(Array(present.reversed()), id: \.self) { kind in   // top segment first
+            ForEach(Array(present.reversed()), id: \.self) { kind in
                 let h = max(CGFloat(day.counts[kind] ?? 0) / CGFloat(axisMax) * plotH, 3)
                 TopRoundedRect(radius: kind == present.last ? 4 : 0)
                     .fill(seriesColor(kind))

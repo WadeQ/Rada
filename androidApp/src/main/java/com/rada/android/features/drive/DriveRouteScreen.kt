@@ -30,10 +30,6 @@ fun DriveRouteScreen(
     }
     val state by viewModel.state.collectAsState()
 
-    // Starts GPS collection the moment permission is actually granted — if permission isn't
-    // granted yet, this does nothing and DriveContentScreen shows the "needs permission" state
-    // instead. If the user grants it later (after initially denying), this LaunchedEffect
-    // re-runs since it's keyed on hasLocationPermission, and tracking starts then.
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) viewModel.onIntent(DriveIntent.StartTracking)
     }

@@ -5,10 +5,6 @@ import com.rada.android.mvi.MviEffect
 import com.rada.android.mvi.MviIntent
 import com.rada.android.mvi.MviState
 
-/**
- * Every field here is backed by DataStore and written as soon as it changes — there is no
- * separate "save" step. [nameInput] is just the live text of the name field.
- */
 data class SettingsState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val userName: String = "",

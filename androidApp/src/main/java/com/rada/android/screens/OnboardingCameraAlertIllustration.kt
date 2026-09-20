@@ -28,24 +28,12 @@ import androidx.compose.ui.unit.dp
 import kotlin.math.sin
 import kotlin.math.PI
 
-/**
- * Native re-implementation of the onboarding hero illustration originally prototyped as
- * animated SVG/CSS in the HTML mockup — a GIF would have meant a blurry, unthemeable raster
- * asset, so this redraws the same scene with Canvas and animates it with Compose's own APIs
- * instead. All coordinates are defined in the same 380x260 "design units" as the SVG source
- * and scaled to the actual canvas size at draw time, so this stays easy to compare against it.
- *
- * NEEDS VERIFICATION: not run against a real device/preview — flagging in case any Canvas API
- * signature (drawIntoCanvas/nativeCanvas.drawText) needs adjustment for the exact Compose
- * version this project ends up pinned to.
- */
 @Composable
 fun OnboardingCameraAlertIllustration(modifier: Modifier = Modifier) {
     val carEnterX = remember { Animatable(-190f) }
     val popupAlpha = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
-        // Overshoot-and-settle, matching the CSS keyframe entrance in the prototype.
         carEnterX.animateTo(8f, tween(800, easing = LinearEasing))
         carEnterX.animateTo(-4f, tween(150))
         carEnterX.animateTo(0f, tween(150))
@@ -76,13 +64,11 @@ fun OnboardingCameraAlertIllustration(modifier: Modifier = Modifier) {
         fun x(v: Float) = v * scale
         fun y(v: Float) = v * scale
 
-        // Sky + stars
         drawRect(Color(0xFF151A21), size = androidx.compose.ui.geometry.Size(size.width, y(170f)))
         listOf(45f to 35f, 90f to 20f, 330f to 30f, 250f to 45f).forEach { (sx, sy) ->
             drawCircle(Color(0xFF3A4250), radius = 1.6f * scale, center = Offset(x(sx), y(sy)))
         }
 
-        // Road
         drawRect(
             Color(0xFF262B33),
             topLeft = Offset(0f, y(170f)),
@@ -97,7 +83,6 @@ fun OnboardingCameraAlertIllustration(modifier: Modifier = Modifier) {
             )
         }
 
-        // Camera pole
         drawRect(Color(0xFF4B5563), topLeft = Offset(x(298f), y(108f)), size = androidx.compose.ui.geometry.Size(x(6f), y(60f)))
         drawRoundRect(
             Color(0xFF333B46), topLeft = Offset(x(280f), y(92f)),
@@ -109,7 +94,6 @@ fun OnboardingCameraAlertIllustration(modifier: Modifier = Modifier) {
         )
         drawCircle(Color(0xFFE5484D), radius = x(3f), center = Offset(x(302f), y(107f)))
 
-        // Radar arcs (dashed, animated phase to suggest travel toward the camera)
         val dash = PathEffect.dashPathEffect(floatArrayOf(x(5f), x(5f)), phase = x(arcPhase))
         listOf(0.9f to 0f, 0.5f to 0.5f).forEachIndexed { i, (baseAlpha, _) ->
             val path = androidx.compose.ui.graphics.Path().apply {
@@ -124,7 +108,6 @@ fun OnboardingCameraAlertIllustration(modifier: Modifier = Modifier) {
             drawPath(path, Color(0xFF6FA1F0), style = Stroke(width = x(2f), cap = StrokeCap.Round, pathEffect = dash), alpha = baseAlpha)
         }
 
-        // Car: entrance offset + idle bob
         val carX = x(carEnterX.value)
         val carY = y((sin(bob * PI.toFloat()) * 2f))
         val carOffset = Offset(carX, carY)
@@ -141,7 +124,6 @@ fun OnboardingCameraAlertIllustration(modifier: Modifier = Modifier) {
             Color(0xFF151A21).copy(alpha = 0.35f), topLeft = Offset(x(90f), y(176f)) + carOffset,
             size = androidx.compose.ui.geometry.Size(x(34f), y(12f)), cornerRadius = androidx.compose.ui.geometry.CornerRadius(x(3f))
         )
-        // Wheels — drawn as rotated spokes so the spin is actually visible, not just a plain circle.
         listOf(80f, 135f).forEach { wx ->
             val center = Offset(x(wx), y(220f)) + carOffset
             drawCircle(Color(0xFF151A21), radius = x(10f), center = center)
@@ -154,7 +136,6 @@ fun OnboardingCameraAlertIllustration(modifier: Modifier = Modifier) {
         }
         drawCircle(Color(0xFFFFE9C2), radius = x(4f), center = Offset(x(151f), y(199f)) + carOffset)
 
-        // Popup (fades in after the car settles)
         val popupPath = androidx.compose.ui.graphics.Path().apply {
             moveTo(x(98f), y(142f)); lineTo(x(110f), y(142f)); lineTo(x(100f), y(154f)); close()
         }

@@ -1,11 +1,5 @@
 import SwiftUI
 
-/// The prototype's "slide to confirm" pattern. Chosen over a plain button because a drag
-/// takes more deliberate intent than a tap — fits sign-in and paid-trial-start moments, and
-/// reads as an automotive interaction (slide-to-start) rather than a generic SaaS button.
-///
-/// NEEDS VERIFICATION: no VoiceOver/accessibility fallback for this drag gesture — production
-/// should add an `.accessibilityAction` alternative that calls the same `onConfirm`.
 struct SlideToConfirm: View {
     let label: String
     let doneLabel: String

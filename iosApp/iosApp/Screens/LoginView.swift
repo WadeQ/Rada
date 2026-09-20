@@ -6,9 +6,6 @@ struct LoginView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Hero: reuses the same onboarding illustration rather than a separate asset, so
-            // the "warned before arrival" story stays consistent across both screens instead
-            // of introducing a second, different visual for the same idea.
             VStack(spacing: 12) {
                 OnboardingCameraAlertIllustration()
                     .frame(maxWidth: 220)
