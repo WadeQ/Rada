@@ -99,6 +99,8 @@ private fun ActiveDriveRoute(
         ) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
+    BatteryOptimisationPrompt(enabled = hasLocationPermission)
+
     val view = LocalView.current
     DisposableEffect(view) {
         view.keepScreenOn = true

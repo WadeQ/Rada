@@ -149,3 +149,14 @@ class TrialPreferences(private val context: Context) {
         private const val DAY_MS = 24L * 60 * 60 * 1000
     }
 }
+
+
+class BatteryPromptPreferences(private val context: Context) {
+    private val key = booleanPreferencesKey("battery_prompt_shown")
+
+    val shown: Flow<Boolean> = context.dataStore.data.map { it[key] ?: false }
+
+    suspend fun markShown() {
+        context.dataStore.edit { it[key] = true }
+    }
+}
