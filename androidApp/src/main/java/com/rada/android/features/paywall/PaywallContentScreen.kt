@@ -1,6 +1,9 @@
 package com.rada.android.features.paywall
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.foundation.layout.size
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import com.rada.android.theme.radaFieldColors
@@ -42,122 +44,110 @@ fun PaywallContentScreen(
     Column(modifier = modifier
         .fillMaxSize()
         .verticalScroll(rememberScrollState())
-        .padding(horizontal = 22.dp, vertical = 30.dp)) {
-        Text(
-            "Go Pro",
-            color = RadaColors.TextPrimary,
-            fontSize = 19.sp,
-            fontWeight = FontWeight.Medium
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            "One avoided fine pays for over five years.",
-            color = RadaColors.TextSecondary,
-            fontSize = 13.sp
-        )
-        Spacer(Modifier.height(18.dp))
+        .animateContentSize()
+        .padding(horizontal = 22.dp, vertical = 24.dp)) {
+        Text("Go Pro", color = RadaColors.TextPrimary, fontSize = 19.sp, fontWeight = FontWeight.Medium)
+        Spacer(Modifier.height(2.dp))
+        Text("One avoided fine pays for years of Pro.", color = RadaColors.TextSecondary, fontSize = 13.sp)
+        Spacer(Modifier.height(14.dp))
 
-        state.plans.forEachIndexed { index, plan ->
-            val selected = index == state.selectedPlanIndex
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(if (selected) RadaColors.Blue.copy(alpha = 0.06f) else Color.Transparent)
-                    .border(
-                        width = 1.dp,
-                        color = if (selected) RadaColors.Blue else RadaColors.Ink3,
-                        shape = RoundedCornerShape(18.dp)
-                    )
-                    .clickable { onIntent(PaywallIntent.PlanSelected(index)) }
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    if (plan.recommended) {
-                        Row(
-                            Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(RadaColors.Accent)
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
-                        ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            state.plans.forEachIndexed { index, plan ->
+                val selected = index == state.selectedPlanIndex
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(if (selected) RadaColors.Accent.copy(alpha = 0.08f) else Color.Transparent)
+                        .border(1.dp, if (selected) RadaColors.Accent else RadaColors.Ink3, RoundedCornerShape(16.dp))
+                        .clickable { onIntent(PaywallIntent.PlanSelected(index)) }
+                        .padding(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(plan.name, color = RadaColors.TextPrimary, fontSize = 13.5.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                        if (plan.recommended) {
                             Text(
                                 "Best value",
                                 color = RadaColors.AccentInk,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(RadaColors.Accent).padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
-                        Spacer(Modifier.height(4.dp))
                     }
-                    Text(
-                        plan.name,
-                        color = RadaColors.TextPrimary,
-                        fontSize = 13.5.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(plan.priceLabel, color = RadaColors.TextMuted, fontSize = 11.sp)
+                    Spacer(Modifier.height(2.dp))
+                    Text(plan.perMonthLabel, color = RadaColors.TextPrimary, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(plan.priceLabel, color = RadaColors.TextMuted, fontSize = 10.5.sp)
                 }
-                Text(
-                    plan.perMonthLabel,
-                    color = RadaColors.TextPrimary,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
-                )
             }
         }
 
-        Spacer(Modifier.height(10.dp))
-        listOf(
-            "Real-time driver-reported checkpoints",
-            "Longer, speed-scaled warning distance",
-            "Offline maps for upcountry trips",
-            "Full alert history and trends"
-        ).forEach { feature ->
-            Row(Modifier.padding(vertical = 5.dp)) {
-                Icon(
-                    Icons.Filled.Check,
-                    contentDescription = null,
-                    tint = RadaColors.Blue,
-                    modifier = Modifier.height(15.dp)
-                )
-                Spacer(Modifier.width(9.dp))
-                Text(feature, color = RadaColors.TextSecondary, fontSize = 12.5.sp)
+        Spacer(Modifier.height(12.dp))
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            listOf("Crowd checkpoints", "Longer warnings", "Alert history").forEach { feature ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Check, contentDescription = null, tint = RadaColors.Accent, modifier = Modifier.size(13.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(feature, color = RadaColors.TextSecondary, fontSize = 11.5.sp)
+                }
             }
         }
 
         Spacer(Modifier.height(18.dp))
-
         Text("How do you want to pay?", color = RadaColors.TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(10.dp))
+
         val chosenPlan = state.plans[state.selectedPlanIndex]
         val yearly = chosenPlan.id == "annual"
-        VisaStyleCard(
-            selected = state.payMethod == PayMethod.PLAY,
-            enabled = state.playStatus != PlayStatus.UNAVAILABLE,
-            periodLabel = if (yearly) "yearly" else "monthly",
-            unavailableNote = if (state.playStatus == PlayStatus.UNAVAILABLE) "Not available on this device or build yet" else null,
-            onClick = { onIntent(PaywallIntent.MethodSelected(PayMethod.PLAY)) }
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            "Pay with a Visa or Mastercard, including M-PESA GlobalPay virtual cards, or M-Pesa through Google Play. Renews on its own; cancel any time in Google Play.",
-            color = RadaColors.TextMuted, fontSize = 11.5.sp, lineHeight = 16.sp
-        )
-        Spacer(Modifier.height(16.dp))
-        MpesaStyleCard(
-            selected = state.payMethod == PayMethod.MPESA,
-            amountLabel = "KES ${chosenPlan.amountKes}",
-            periodLabel = if (yearly) "One year" else "30 days",
-            onClick = { onIntent(PaywallIntent.MethodSelected(PayMethod.MPESA)) }
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            "Approve an M-Pesa prompt on your phone with your PIN. Pay again only when you choose to.",
-            color = RadaColors.TextMuted, fontSize = 11.5.sp, lineHeight = 16.sp
-        )
-        Spacer(Modifier.height(16.dp))
+        val playUsable = state.playStatus != PlayStatus.UNAVAILABLE
+
+        if (state.payMethod == PayMethod.PLAY) {
+            VisaStyleCard(
+                selected = true,
+                enabled = playUsable,
+                periodLabel = if (yearly) "yearly" else "monthly",
+                unavailableNote = null,
+                onClick = {}
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                "Visa, Mastercard or M-Pesa through Google Play. Renews on its own; cancel any time in Google Play.",
+                color = RadaColors.TextMuted, fontSize = 11.sp, lineHeight = 15.sp
+            )
+        } else {
+            MethodStrip(
+                brand = Brush.linearGradient(listOf(PayBrand.VisaNavy, PayBrand.VisaBlue)),
+                mark = "VISA",
+                title = "Card or M-Pesa via Google Play",
+                subtitle = if (playUsable) "Auto-renews · Visa, Mastercard, GlobalPay" else "Not available on this device or build yet",
+                enabled = playUsable,
+                onClick = { onIntent(PaywallIntent.MethodSelected(PayMethod.PLAY)) }
+            )
+        }
+        Spacer(Modifier.height(12.dp))
+        if (state.payMethod == PayMethod.MPESA) {
+            MpesaStyleCard(
+                selected = true,
+                amountLabel = "KES ${chosenPlan.amountKes}",
+                periodLabel = if (yearly) "One year" else "30 days",
+                onClick = {}
+            )
+            Spacer(Modifier.height(5.dp))
+            Text(
+                "Approve a prompt on your phone with your M-Pesa PIN. Pay again only when you choose to.",
+                color = RadaColors.TextMuted, fontSize = 11.sp, lineHeight = 15.sp
+            )
+        } else {
+            MethodStrip(
+                brand = Brush.linearGradient(listOf(PayBrand.MpesaGreen, PayBrand.MpesaDeep)),
+                mark = "M-PESA",
+                title = "Pay once with M-Pesa",
+                subtitle = "No auto-renew · STK push",
+                enabled = true,
+                onClick = { onIntent(PaywallIntent.MethodSelected(PayMethod.MPESA)) }
+            )
+        }
+        Spacer(Modifier.height(14.dp))
 
         if (state.payMethod == PayMethod.MPESA) {
             Text("M-Pesa number", color = RadaColors.TextSecondary, fontSize = 11.5.sp)
@@ -203,13 +193,6 @@ fun PaywallContentScreen(
                 enabled = state.phoneInput.isNotBlank() && !state.isProcessing,
                 onConfirm = { onIntent(PaywallIntent.PayTapped) }
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "You'll get an M-Pesa prompt on your phone to enter your PIN.",
-                color = RadaColors.TextMuted, fontSize = 11.sp,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
         } else {
             SlideToConfirm(
                 label = "Slide to subscribe with Google Play",
@@ -219,20 +202,18 @@ fun PaywallContentScreen(
                 enabled = state.playStatus == PlayStatus.AVAILABLE && !state.isProcessing,
                 onConfirm = { onIntent(PaywallIntent.PlaySubscribeTapped) }
             )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Google Play shows your saved cards and asks you to confirm.",
-                color = RadaColors.TextMuted, fontSize = 11.sp,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
         }
         Spacer(Modifier.height(10.dp))
-        OutlinedButton(
-            onClick = { onIntent(PaywallIntent.RestoreTapped) },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Restore purchase")
-        }
+        Text(
+            "Restore purchase",
+            color = RadaColors.TextSecondary,
+            fontSize = 12.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(10.dp))
+                .clickable { onIntent(PaywallIntent.RestoreTapped) }
+                .padding(vertical = 8.dp)
+        )
     }
 }

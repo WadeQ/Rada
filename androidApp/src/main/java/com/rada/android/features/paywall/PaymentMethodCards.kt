@@ -255,3 +255,33 @@ private fun Contactless() {
 private fun SelectedTick(modifier: Modifier, tint: Color) {
     Icon(Icons.Filled.CheckCircle, contentDescription = "Selected", tint = tint, modifier = modifier.size(22.dp))
 }
+
+@Composable
+fun MethodStrip(
+    brand: Brush,
+    mark: String,
+    title: String,
+    subtitle: String,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val shape = RoundedCornerShape(16.dp)
+    Row(
+        modifier
+            .fillMaxWidth()
+            .alpha(if (enabled) 1f else 0.5f)
+            .clip(shape)
+            .background(brand)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(mark, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic)
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, color = Color.White, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
+            Text(subtitle, color = Color.White.copy(alpha = 0.85f), fontSize = 11.sp)
+        }
+    }
+}
