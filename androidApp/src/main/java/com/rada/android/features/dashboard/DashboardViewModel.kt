@@ -4,6 +4,7 @@ import LocationProvider
 import androidx.lifecycle.viewModelScope
 import com.rada.android.data.ReportEvent
 import com.rada.android.data.ReportRepository
+import com.rada.android.data.StatsRepository
 import com.rada.android.data.UserProfilePreferences
 import com.rada.android.mvi.MviViewModel
 import kotlinx.coroutines.launch
@@ -18,7 +19,8 @@ import java.util.Locale
 class DashboardViewModel(
     private val userProfilePreferences: UserProfilePreferences,
     private val reportRepository: ReportRepository,
-    private val locationProvider: LocationProvider?
+    private val locationProvider: LocationProvider?,
+    private val statsRepository: StatsRepository
 ) : MviViewModel<DashboardIntent, DashboardState, DashboardEffect>(
     DashboardState(greeting = computeGreeting())
 ) {
@@ -41,6 +43,9 @@ class DashboardViewModel(
             userProfilePreferences.userName.collect { name ->
                 setState { copy(userName = name ?: "Driver") }
             }
+        }
+        viewModelScope.launch {
+            statsRepository.monthStats.collect { stats -> setState { copy(monthStats = stats) } }
         }
         viewModelScope.launch {
             userProfilePreferences.photoPath.collect { path -> setState { copy(photoPath = path) } }

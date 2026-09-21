@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.location.LocationServices
 import com.rada.android.data.FirestoreReportRepository
 import com.rada.android.data.TrialState
+import com.rada.android.data.StatsRepository
 import com.rada.android.data.UserProfilePreferences
 import com.rada.shared.location.AndroidLocationProvider
 
@@ -41,7 +42,8 @@ fun DashboardRouteScreen(
                 LocationServices.getFusedLocationProviderClient(
                     context
                 )
-            ) else null
+            ) else null,
+            StatsRepository()
         )
     }
     val state by viewModel.state.collectAsState()

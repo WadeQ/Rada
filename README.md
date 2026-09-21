@@ -78,7 +78,7 @@ eye. 👁️
 | 🔔 | **Loud, timely alerts** | A two-tone chime, then a spoken warning such as *"Speed camera ahead, Thika Road. 300 metres."*, then a three-beep final warning about 120 m out. Music ducks instead of stopping, and alerts keep working with the screen off. |
 | ⏱️ | **Warning distance** | Choose how early you're warned: **Standard** (about 7 s ahead), **Early** (10 s) or **Earliest** (14 s), so highway drivers get more time. |
 | 👆 | **One-tap reporting** | Camera, checkpoint or alcohol check, one tap each. The tile floods with colour, you feel a haptic tick, and an **Undo** chip stays for five seconds so a mis-tap while driving is recoverable. |
-| 📊 | **Home dashboard** | Estimated fines avoided, a weekly line chart of reports by type (amber camera, blue checkpoint, red alcohol), and the newest alerts near you. |
+| 📊 | **Home dashboard** | **Real** estimated fines avoided (cameras you slowed down for, tracked on your account), a weekly line chart of reports by type (amber camera, blue checkpoint, red alcohol), and the newest alerts near you. |
 | 🆘 | **Roadside help** | Emergency numbers, tow companies and mechanics, one tap to call. |
 | 🎛️ | **Settings** | Your name (from your account) and profile photo (tap the camera to change or remove it), alert switch, an **Alert settings** sheet (warning distance and a **Test alert sound** button), a dark-mode switch and Log out. Everything saves as you change it; there is no Save button. |
 | 🌗 | **Light and dark themes** | A lime-on-ink identity with burgundy accents, and an adaptive launcher icon (with a themed variant on Android 13+). |
@@ -105,6 +105,9 @@ flowchart LR
   the opposite carriageway stays quiet.
 - **No repeat spam.** Each camera goes `NOT_ALERTED → ALERTED → PASSED`, with hysteresis so it
   doesn't re-fire as you drive by.
+- **Did you slow down?** After a warning, the engine tracks the closest approach. If your speed there
+  is at or under the limit (plus 2 km/h for GPS noise), the camera is counted as evaded and the
+  estimated fine is added to your month. If you didn't slow down, only the warning is counted.
 - **Fast lookups.** `CameraGridIndex` buckets cameras into ~1 km cells so each location update
   only checks the cameras around you.
 - **Survives the background.** A foreground location service keeps tracking while you use Maps or
@@ -241,6 +244,7 @@ Legend: ✅ working · 🧪 tested, needs a live check · 🚧 in progress · �
 |---|---|---|
 | ✅ | Alert engine, grid index, live map, camera-following and adaptive zoom | Working; **audio alerts confirmed on a real drive** |
 | ✅ | Crowd reports: submit, undo, live alerts, weekly chart | Working |
+| ✅ | Fines-avoided tracking | A camera counts as evaded when you got a warning and were at or under the limit as you passed it; the estimate uses KES 10,000 per fine. Stored per account and month, covered by engine and rules tests |
 | ✅ | Username and password sign-in, persistent sessions | Working end to end |
 | ✅ | Free trial tied to the account | Verified: wiping app data no longer restarts it |
 | ✅ | Firestore security rules | Published and covered by emulator tests |
@@ -255,8 +259,8 @@ Legend: ✅ working · 🧪 tested, needs a live check · 🚧 in progress · �
 | 🔜 | Remaining camera coordinates | See [`docs/cameras-todo.md`](docs/cameras-todo.md) |
 
 > [!IMPORTANT]
-> Some numbers are still placeholders: Home's "estimated fines avoided" figure is mock data, and
-> the tow and mechanic phone numbers are placeholders.
+> The tow and mechanic phone numbers are still placeholders, and the iOS prototype still uses mock
+> data for its Home card.
 
 ## 📜 License
 

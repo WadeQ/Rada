@@ -37,5 +37,11 @@ enum class CameraAlertStatus {
 
 data class CameraTrackingState(
     var status: CameraAlertStatus = CameraAlertStatus.NOT_ALERTED,
-    var lastDistanceMeters: Double = Double.MAX_VALUE
+    var lastDistanceMeters: Double = Double.MAX_VALUE,
+    var closestDistanceMeters: Double = Double.MAX_VALUE,
+    var speedAtClosestKmh: Double = 0.0
 )
+
+object FineEstimates {
+    const val AVG_SPEED_FINE_KES = 10_000
+}

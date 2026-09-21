@@ -22,6 +22,18 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /users/{uid}/monthly/{month} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && month.matches('^[0-9]{4}-[0-9]{2}$')
+        && request.resource.data.keys().hasOnly(['warnings', 'evaded', 'savedKes', 'updatedAt'])
+        && request.resource.data.warnings is int && request.resource.data.warnings >= 0
+        && request.resource.data.evaded is int && request.resource.data.evaded >= 0
+        && request.resource.data.savedKes is int && request.resource.data.savedKes >= 0
+        && request.resource.data.evaded <= request.resource.data.warnings;
+      allow delete: if false;
+    }
+
     match /playPurchases/{token} {
       allow read, write: if false;
     }

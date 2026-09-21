@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import com.rada.android.data.AlertPreferences
 import com.rada.android.data.TrialState
 import com.rada.android.data.FirestoreReportRepository
+import com.rada.android.data.StatsRepository
 import com.rada.android.tracking.AlertNotifications
 import com.rada.android.tracking.AlertSpeaker
 import com.rada.android.tracking.TrackingService
@@ -77,7 +78,8 @@ private fun ActiveDriveRoute(
             FirestoreReportRepository(),
             AlertPreferences(context),
             AlertNotifications(context.applicationContext),
-            AlertSpeaker(context)
+            AlertSpeaker(context),
+            StatsRepository()
         )
     }
     val state by viewModel.state.collectAsState()

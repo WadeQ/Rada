@@ -4,6 +4,7 @@ import LocationProvider
 import androidx.lifecycle.viewModelScope
 import com.rada.android.data.AlertPreferences
 import com.rada.android.data.ReportRepository
+import com.rada.android.data.StatsRepository
 import com.rada.android.tracking.AlertNotifications
 import com.rada.android.tracking.AlertSpeaker
 import com.rada.android.domain.isVisibleTo
@@ -22,7 +23,8 @@ class DriveViewModel(
     private val reportRepository: ReportRepository,
     private val alertPreferences: AlertPreferences,
     private val notifications: AlertNotifications,
-    private val speaker: AlertSpeaker
+    private val speaker: AlertSpeaker,
+    private val stats: StatsRepository
 ) : MviViewModel<DriveIntent, DriveState, DriveEffect>(DriveState()) {
 
     companion object {
@@ -113,6 +115,27 @@ class DriveViewModel(
         startLocation()
     }
 
+    private fun handleWarning(camera: SpeedCamera, distanceMeters: Double) {
+        if (!camera.type.isVisibleTo(isPro)) return
+        stats.recordWarning()
+        if (alertsEnabled) speaker.warn(camera.type, distanceMeters.toInt(), camera.placeName)
+        if (!inForeground && alertsEnabled) {
+            notifications.post(camera.id, camera.type, distanceMeters.toInt(), camera.placeName)
+        }
+        setState {
+            copy(
+                activeAlert = ActiveAlert(
+                    cameraId = camera.id,
+                    type = camera.type,
+                    distanceMeters = distanceMeters.toInt(),
+                    speedLimitKmh = camera.speedLimit.takeIf { it > 0 }?.toInt(),
+                    placeName = camera.placeName,
+                    approximate = camera.approximate
+                )
+            )
+        }
+    }
+
     private fun startLocation() {
         locationJob?.cancel()
         lastFixAt = SystemClock.elapsedRealtime()
@@ -154,25 +177,15 @@ class DriveViewModel(
                     }
                 }
 
-                engine.evaluateDriverSafety(driverState) { camera, _, distanceMeters ->
-                    if (!camera.type.isVisibleTo(isPro)) return@evaluateDriverSafety
-                    if (alertsEnabled) speaker.warn(camera.type, distanceMeters.toInt(), camera.placeName)
-                    if (!inForeground && alertsEnabled) {
-                        notifications.post(camera.id, camera.type, distanceMeters.toInt(), camera.placeName)
+                engine.evaluateDriverSafety(driverState, object : SpeedAlertEngine.AlertListener {
+                    override fun onOutcome(camera: SpeedCamera, evaded: Boolean, speedKmh: Double, limitKmh: Double) {
+                        if (evaded) stats.recordEvaded()
                     }
-                    setState {
-                        copy(
-                            activeAlert = ActiveAlert(
-                                cameraId = camera.id,
-                                type = camera.type,
-                                distanceMeters = distanceMeters.toInt(),
-                                speedLimitKmh = camera.speedLimit.takeIf { it > 0 }?.toInt(),
-                                placeName = camera.placeName,
-                                approximate = camera.approximate
-                            )
-                        )
+
+                    override fun onWarning(camera: SpeedCamera, currentSpeed: Double, distanceMeters: Double) {
+                        handleWarning(camera, distanceMeters)
                     }
-                }
+                })
             }
         }
     }

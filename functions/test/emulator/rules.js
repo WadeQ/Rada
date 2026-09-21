@@ -45,5 +45,18 @@ const { doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp } = require("
   await assertFails(deleteDoc(doc(alice, "reports/r_old")));
   console.log("ok  reports: validated creates, owner-only delete, sign-in required");
 
+  const stats = (db, month, data) => setDoc(doc(db, `users/${db === alice ? "alice" : "bob"}/monthly/${month}`), data, { merge: true });
+  const ok = { warnings: 3, evaded: 2, savedKes: 20000, updatedAt: serverTimestamp() };
+  await assertSucceeds(stats(alice, "2026-09", ok));
+  await assertFails(stats(alice, "2026-9", ok));
+  await assertFails(stats(alice, "2026-10", { ...ok, evaded: 5 }));
+  await assertFails(stats(alice, "2026-10", { ...ok, extra: 1 }));
+  await assertFails(stats(alice, "2026-10", { ...ok, savedKes: -1 }));
+  await assertFails(setDoc(doc(bob, "users/alice/monthly/2026-09"), ok));
+  await assertFails(getDoc(doc(bob, "users/alice/monthly/2026-09")));
+  await assertSucceeds(getDoc(doc(alice, "users/alice/monthly/2026-09")));
+  await assertFails(deleteDoc(doc(alice, "users/alice/monthly/2026-09")));
+  console.log("ok  monthly stats: own account only, validated, no delete");
+
   await env.cleanup();
 })().catch((e) => { console.error("FAIL", e); process.exit(1); });

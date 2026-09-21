@@ -1,6 +1,7 @@
 package com.rada.android.features.dashboard
 
 import com.rada.shared.domain.ReportType
+import com.rada.android.data.MonthStats
 import com.rada.android.mvi.MviEffect
 import com.rada.android.mvi.MviIntent
 import com.rada.android.mvi.MviState
@@ -10,7 +11,7 @@ data class DashboardState(
     val userName: String = "",
     val photoPath: String? = null,
     val greeting: String = "",
-    val estimatedFinesAvoidedKes: Int = MockData.estimatedFinesAvoidedKes,
+    val monthStats: MonthStats = MonthStats(),
     val weeklyBars: List<DayBar> = emptyList(),
     val recentAlerts: List<MockData.RecentAlert> = MockData.recentAlerts,
     val isLocationFiltered: Boolean = false

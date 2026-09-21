@@ -59,7 +59,6 @@ object MockData {
         WeeklyBar("S", 5, false)
     )
 
-    const val estimatedFinesAvoidedKes = 40000
 
     data class Contact(
         val name: String,

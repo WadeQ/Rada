@@ -29,6 +29,11 @@ kotlin {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
             }
         }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
         val androidMain by getting {
             dependencies {
                 implementation("com.google.android.gms:play-services-location:21.3.0")

@@ -16,10 +16,15 @@ class SpeedAlertEngine(private var gridIndex: CameraGridIndex) {
         private const val BEARING_TOLERANCE_DEGREES = 20.0
         private const val RESET_DISTANCE_MULTIPLIER = 2.0
         private const val MIN_CLOSING_METERS = 1.0
+        private const val PASS_CONFIRM_METERS = 30.0
+        private const val MAX_PASS_DISTANCE_METERS = 90.0
+        private const val SPEED_TOLERANCE_KMH = 2.0
     }
 
     fun interface AlertListener {
         fun onWarning(camera: SpeedCamera, currentSpeed: Double, distanceMeters: Double)
+
+        fun onOutcome(camera: SpeedCamera, evaded: Boolean, speedKmh: Double, limitKmh: Double) {}
     }
     @kotlin.concurrent.Volatile
     var warningLead: WarningLead = WarningLead.STANDARD
@@ -51,12 +56,32 @@ class SpeedAlertEngine(private var gridIndex: CameraGridIndex) {
                         if (shouldFire) {
                             listener.onWarning(camera, driver.speedCurrent, distance)
                             state.status = CameraAlertStatus.ALERTED
+                            state.closestDistanceMeters = distance
+                            state.speedAtClosestKmh = driver.speedCurrent
                         }
                     }
                 }
 
                 CameraAlertStatus.ALERTED -> {
-                    if (distance > alertDistance) state.status = CameraAlertStatus.PASSED
+                    if (distance < state.closestDistanceMeters) {
+                        state.closestDistanceMeters = distance
+                        state.speedAtClosestKmh = driver.speedCurrent
+                    }
+                    val movedAway = distance > state.closestDistanceMeters + PASS_CONFIRM_METERS
+                    val farAway = distance > warningLead.maxMeters * 2
+                    if (movedAway || farAway) {
+                        state.status = CameraAlertStatus.PASSED
+                        val isFixedCamera = camera.type == ReportType.CAMERA && camera.speedLimit > 0
+                        if (isFixedCamera && state.closestDistanceMeters <= MAX_PASS_DISTANCE_METERS) {
+                            listener.onOutcome(
+                                camera,
+                                state.speedAtClosestKmh <= camera.speedLimit + SPEED_TOLERANCE_KMH,
+                                state.speedAtClosestKmh,
+                                camera.speedLimit
+                            )
+                        }
+                        state.closestDistanceMeters = Double.MAX_VALUE
+                    }
                 }
 
                 CameraAlertStatus.PASSED -> {

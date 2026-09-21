@@ -31,6 +31,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
+import com.rada.shared.domain.FineEstimates
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -108,16 +111,24 @@ fun DashboardContentScreen(
                     color = RadaColors.Blue,
                     fontSize = 11.5.sp
                 )
+                val stats = state.monthStats
+                val savedShown by animateIntAsState(stats.savedKes, tween(700), label = "saved")
                 Text(
-                    "KES ${state.estimatedFinesAvoidedKes}",
+                    "KES ${"%,d".format(savedShown)}",
                     color = RadaColors.TextPrimary,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "4 warnings acted on · 10k avg fine per strike",
+                    if (stats.warnings == 0) "No warnings acted on yet this month"
+                    else "${stats.evaded} ${if (stats.evaded == 1) "camera" else "cameras"} evaded · ${stats.warnings} ${if (stats.warnings == 1) "warning" else "warnings"} this month",
                     color = RadaColors.Blue,
                     fontSize = 11.5.sp
+                )
+                Text(
+                    "Estimated at KES ${"%,d".format(FineEstimates.AVG_SPEED_FINE_KES)} per speed fine",
+                    color = RadaColors.TextMuted,
+                    fontSize = 10.5.sp
                 )
             }
             Spacer(Modifier.height(16.dp))
