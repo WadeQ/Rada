@@ -33,6 +33,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.delay
+import kotlin.math.ln
+import kotlin.math.cos
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -314,7 +317,25 @@ fun DriveContentScreen(
 }
 
 private val FALLBACK_CENTER = LatLng(-1.2864, 36.8172)
-private const val FOLLOW_ZOOM = 15f
+private const val FOLLOW_ZOOM = 16f
+private const val RESUME_FOLLOW_MS = 8_000L
+private const val ZOOM_ANIM_MS = 900
+
+private fun followZoom(speedKmh: Int, latitude: Double?, cameraDistanceMeters: Int?): Float {
+    val bySpeed = when {
+        speedKmh < 25 -> 17f
+        speedKmh < 50 -> 16.3f
+        speedKmh < 80 -> 15.5f
+        else -> 14.8f
+    }
+    if (cameraDistanceMeters == null || cameraDistanceMeters > CAMERA_ZOOM_RANGE_M || latitude == null) return bySpeed
+    val metersPerDp = cameraDistanceMeters.coerceAtLeast(40) * 1.3 / HALF_MAP_DP
+    val forCamera = (ln(156_543.03 * cos(Math.toRadians(latitude)) / metersPerDp) / ln(2.0)).toFloat()
+    return minOf(bySpeed, forCamera).coerceIn(13.5f, 17.5f)
+}
+
+private const val CAMERA_ZOOM_RANGE_M = 1_000
+private const val HALF_MAP_DP = 260.0
 
 @SuppressLint("MissingPermission", "UnrememberedMutableState")
 @Composable
@@ -323,6 +344,7 @@ private fun DriveMap(state: DriveState) {
         position = CameraPosition.fromLatLngZoom(FALLBACK_CENTER, 11f)
     }
     var following by remember { mutableStateOf(true) }
+    val zoom = remember { Animatable(FOLLOW_ZOOM) }
 
     LaunchedEffect(cameraPositionState) {
         snapshotFlow { cameraPositionState.cameraMoveStartedReason }.collect { reason ->
@@ -330,12 +352,10 @@ private fun DriveMap(state: DriveState) {
         }
     }
 
-    LaunchedEffect(state.currentLatitude, state.currentLongitude, following) {
-        val lat = state.currentLatitude
-        val lng = state.currentLongitude
-        if (following && lat != null && lng != null) {
-            val zoom = maxOf(cameraPositionState.position.zoom, FOLLOW_ZOOM)
-            cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(LatLng(lat, lng), zoom))
+    LaunchedEffect(following) {
+        if (!following) {
+            delay(RESUME_FOLLOW_MS)
+            following = true
         }
     }
 
@@ -360,6 +380,7 @@ private fun DriveMap(state: DriveState) {
             placedOnce = true
             glideFrom = target; glideTo = target
             carState.position = target
+            cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(target, zoom.value))
             return@LaunchedEffect
         }
         glideFrom = carState.position
@@ -371,6 +392,18 @@ private fun DriveMap(state: DriveState) {
                 glideFrom.latitude + (glideTo.latitude - glideFrom.latitude) * f,
                 glideFrom.longitude + (glideTo.longitude - glideFrom.longitude) * f
             )
+            if (following) cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(carState.position, zoom.value))
+        }
+    }
+
+    val alert = state.activeAlert
+    val alertCamera = alert?.let { a -> state.nearbyCameras.firstOrNull { it.id == a.cameraId } }
+    val targetZoom = followZoom(state.currentSpeedKmh, state.currentLatitude, alert?.distanceMeters?.takeIf { alertCamera != null })
+    LaunchedEffect(targetZoom) {
+        zoom.animateTo(targetZoom, tween(ZOOM_ANIM_MS, easing = LinearEasing)) {
+            if (following && placedOnce) {
+                cameraPositionState.move(CameraUpdateFactory.newLatLngZoom(carState.position, value))
+            }
         }
     }
 

@@ -86,12 +86,14 @@ Fused location ─► DriverState (lat, lng, speed, bearing)
           · checkpoints and alcohol checks alert on presence; cameras also need overspeed
                      │
                      ▼
-        AlertNotifier (notification + sound) ─► Drive screen banner
+        AlertSpeaker (chime + spoken warning, final beep at ~120 m)
+        + notification when the app is in the background ─► Drive screen banner
 ```
 
 `CameraGridIndex` buckets cameras into ~1 km cells so each location update only checks the
-cameras around you. The engine and the Drive banner work today; `AlertNotifier` (the system
-notification and sound) is implemented in `:shared` but not wired into the Android app yet.
+cameras around you. The engine, the Drive banner and the audio alerts work today: a two-tone chime, a spoken warning
+("Speed camera ahead, Thika Road. 300 metres.") over navigation-guidance audio so music ducks, and a
+three-beep final warning about 120 m out. The Alert notifications switch in Settings turns them off.
 
 ## Project layout
 
@@ -151,12 +153,14 @@ Rada is early. What is real and what is not:
   the UI on Android.
 - **Sign-in:** username and password work end to end. Google and Apple are implemented but need
   the console setup above. There is no password recovery yet, and iOS has no sign-in.
-- **Stubbed:** payments (Pro is an in-memory flag and only the alcohol-check teaser is gated; M-Pesa / Play
-  Billing is not wired), Home's “estimated fines avoided” figure (mock), and the tow and
-  mechanic phone numbers (placeholders).
-- **Not built yet:** hooking `AlertNotifier` into the app (so the “Alert notifications” switch in
-  Settings saves a preference that nothing reads yet), the foreground service for background
-  alerts (Play Store policy for navigation apps), a bundled alert sound,.
+- **Payments:** M-Pesa STK push runs through Cloud Functions (`functions/`) and grants Pro by
+  writing `proUntil` on the account. Verified against the Daraja sandbox and the emulator suite;
+  waiting on a production Till for a live payment. Pro is time-boxed (30 or 365 days), not
+  auto-renewing.
+- **Stubbed:** Home's “estimated fines avoided” figure (mock) and the tow and mechanic phone
+  numbers (placeholders).
+- **Not verified yet:** audio alerts and background tracking on a real drive (tested on the
+  emulator with simulated GPS), Google sign-in on a device, and Apple sign-in (needs setup).
 - **iOS is a prototype:** the screens mirror Android's design, but with mock data and local
   storage. It has no location, map or Firestore layer yet, so Drive and live reports are
   Android-only for now.

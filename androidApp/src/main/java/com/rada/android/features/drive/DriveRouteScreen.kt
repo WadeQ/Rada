@@ -25,6 +25,7 @@ import com.rada.android.data.AlertPreferences
 import com.rada.android.data.TrialState
 import com.rada.android.data.FirestoreReportRepository
 import com.rada.android.tracking.AlertNotifications
+import com.rada.android.tracking.AlertSpeaker
 import com.rada.android.tracking.TrackingService
 import com.rada.shared.location.AndroidLocationProvider
 
@@ -75,7 +76,8 @@ private fun ActiveDriveRoute(
             AndroidLocationProvider(LocationServices.getFusedLocationProviderClient(context)),
             FirestoreReportRepository(),
             AlertPreferences(context),
-            AlertNotifications(context.applicationContext)
+            AlertNotifications(context.applicationContext),
+            AlertSpeaker(context)
         )
     }
     val state by viewModel.state.collectAsState()

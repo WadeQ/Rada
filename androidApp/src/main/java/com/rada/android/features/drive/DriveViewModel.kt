@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.rada.android.data.AlertPreferences
 import com.rada.android.data.ReportRepository
 import com.rada.android.tracking.AlertNotifications
+import com.rada.android.tracking.AlertSpeaker
 import com.rada.android.domain.isVisibleTo
 import com.rada.android.mvi.MviViewModel
 import com.rada.shared.data.MockData
@@ -20,7 +21,8 @@ class DriveViewModel(
     private val locationProvider: LocationProvider,
     private val reportRepository: ReportRepository,
     private val alertPreferences: AlertPreferences,
-    private val notifications: AlertNotifications
+    private val notifications: AlertNotifications,
+    private val speaker: AlertSpeaker
 ) : MviViewModel<DriveIntent, DriveState, DriveEffect>(DriveState()) {
 
     companion object {
@@ -30,6 +32,7 @@ class DriveViewModel(
         private const val STALE_AFTER_MS = 6_000L
         private const val MIN_SPEED_FOR_HEADING_KMH = 4.0
         private const val WATCHDOG_INTERVAL_MS = 2_000L
+        private const val FINAL_WARNING_METERS = 120f
     }
 
     private var cameraIndex = CameraGridIndex(MockData.nairobiCameras + MockData.demoAlcoblowReport)
@@ -41,6 +44,12 @@ class DriveViewModel(
     @Volatile private var alertsEnabled = true
     private var lastFixAt = 0L
     private var liveReports: List<SpeedCamera> = emptyList()
+    private val finalWarned = mutableSetOf<String>()
+
+    override fun onCleared() {
+        speaker.release()
+        super.onCleared()
+    }
 
     override fun onIntent(intent: DriveIntent) {
         when (intent) {
@@ -128,8 +137,22 @@ class DriveViewModel(
                     if (alert != null && nearby.none { it.id == alert.cameraId }) copy(activeAlert = null) else this
                 }
 
+                finalWarned.retainAll(nearby.map { it.id }.toSet())
+                currentState.activeAlert?.let { alert ->
+                    val camera = nearby.firstOrNull { it.id == alert.cameraId } ?: return@let
+                    val result = FloatArray(1)
+                    android.location.Location.distanceBetween(
+                        driverState.latitude, driverState.longitude, camera.latitude, camera.longitude, result
+                    )
+                    setState { copy(activeAlert = activeAlert?.copy(distanceMeters = result[0].toInt())) }
+                    if (alertsEnabled && result[0] <= FINAL_WARNING_METERS && finalWarned.add(camera.id)) {
+                        speaker.finalWarning()
+                    }
+                }
+
                 engine.evaluateDriverSafety(driverState) { camera, _, distanceMeters ->
                     if (!camera.type.isVisibleTo(isPro)) return@evaluateDriverSafety
+                    if (alertsEnabled) speaker.warn(camera.type, distanceMeters.toInt(), camera.placeName)
                     if (!inForeground && alertsEnabled) {
                         notifications.post(camera.id, camera.type, distanceMeters.toInt(), camera.placeName)
                     }
