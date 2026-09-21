@@ -58,8 +58,8 @@ refunds. Both routes end in the same `users/{uid}.proUntil` (the later of M-Pesa
 
 One-time setup in Google Play Console:
 
-1. **Subscriptions** (Monetize → Products → Subscriptions): create `rada_pro_monthly` (KES 150, every
-   month) and `rada_pro_annual` (KES 1,200, every year), each with one base plan set to auto-renew.
+1. **Subscriptions** (Monetize → Products → Subscriptions): create `rada_pro_monthly` (KES 200, every
+   month) and `rada_pro_annual` (KES 1,800, every year), each with one base plan set to auto-renew.
 2. **API access** (Setup → API access): link the Google Cloud project `rada-app-78472`, then invite
    the service account `216725826063-compute@developer.gserviceaccount.com` and grant it
    "View financial data" and "Manage orders and subscriptions".

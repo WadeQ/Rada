@@ -120,8 +120,8 @@ flowchart LR
 | Plan | Price | What you get |
 |---|---|---|
 | 🎁 **Free trial** | 7 days, once per account | Full Drive access |
-| 📅 **Monthly** | KES 150 for 30 days | Keep Drive after the trial, plus alcohol-check alerts |
-| 🏆 **Annual** | KES 1,200 for 365 days | Everything in Monthly, about KES 100 a month |
+| 📅 **Monthly** | KES 200 for 30 days | Keep Drive after the trial, plus alcohol-check alerts |
+| 🏆 **Annual** | KES 1,800 for 365 days | Everything in Monthly, about KES 150 a month |
 
 Two ways to pay, side by side on the paywall, so everyone can use what they already have:
 

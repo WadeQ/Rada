@@ -128,7 +128,7 @@ fun PaywallContentScreen(
         if (state.payMethod == PayMethod.MPESA) {
             MpesaStyleCard(
                 selected = true,
-                amountLabel = "KES ${chosenPlan.amountKes}",
+                amountLabel = "KES ${"%,d".format(chosenPlan.amountKes)}",
                 periodLabel = if (yearly) "One year" else "30 days",
                 onClick = {}
             )

@@ -48,8 +48,8 @@ enum RadaMockData {
 
     struct PricingPlan { let id: String; let name: String; let priceLabel: String; let perMonthLabel: String; let recommended: Bool; let amountKes: Int }
     static let pricingPlans = [
-        PricingPlan(id: "annual", name: "Annual", priceLabel: "KES 1,200 / year", perMonthLabel: "KES 100/mo", recommended: true, amountKes: 1200),
-        PricingPlan(id: "monthly", name: "Monthly", priceLabel: "Billed every month", perMonthLabel: "KES 150/mo", recommended: false, amountKes: 150)
+        PricingPlan(id: "annual", name: "Annual", priceLabel: "KES 1,800 / year", perMonthLabel: "KES 150/mo", recommended: true, amountKes: 1800),
+        PricingPlan(id: "monthly", name: "Monthly", priceLabel: "Billed every month", perMonthLabel: "KES 200/mo", recommended: false, amountKes: 200)
     ]
 }
 

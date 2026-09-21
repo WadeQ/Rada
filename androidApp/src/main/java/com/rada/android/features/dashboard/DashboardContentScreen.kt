@@ -138,7 +138,7 @@ fun DashboardContentScreen(
                             isPro -> "You're on Pro"
                             trial is TrialState.Active -> "Free trial · ${trial.daysLeft} ${if (trial.daysLeft == 1) "day" else "days"} left"
                             trial is TrialState.Expired -> "Your free trial has ended"
-                            else -> "Go Pro · KES 150/month"
+                            else -> "Go Pro · KES 200/month"
                         },
                         color = RadaColors.TextPrimary,
                         fontSize = 13.sp,
@@ -148,8 +148,8 @@ fun DashboardContentScreen(
                         when {
                             isPro -> proUntilMillis?.let { "Active until ${java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(it))}." } ?: "Real-time checkpoints, longer warnings and offline maps are on."
                             trial is TrialState.Active -> "Full Drive access. Go Pro to keep it after the trial."
-                            trial is TrialState.Expired -> "Go Pro · KES 150/month to keep using Drive."
-                            else -> "Try Drive free for ${TrialPreferences.TRIAL_DAYS} days, then KES 150/month."
+                            trial is TrialState.Expired -> "Go Pro · KES 200/month to keep using Drive."
+                            else -> "Try Drive free for ${TrialPreferences.TRIAL_DAYS} days, then KES 200/month."
                         },
                         color = RadaColors.TextSecondary, fontSize = 11.5.sp
                     )

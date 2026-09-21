@@ -53,7 +53,7 @@ struct PaywallView: View {
             Spacer()
 
             SlideToConfirm(label: "Slide to start free trial", doneLabel: "Trial started", onConfirm: onTrialStarted)
-            Text("7 days free, then KES 100/mo · cancel anytime")
+            Text("7 days free, then KES 200/mo · cancel anytime")
                 .font(.system(size: 11)).foregroundColor(.radaTextMuted)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)

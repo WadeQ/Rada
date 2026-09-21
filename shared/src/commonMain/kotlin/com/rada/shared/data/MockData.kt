@@ -108,18 +108,18 @@ object MockData {
         PricingPlan(
             "annual",
             "Annual",
-            "KES 1,200 / year",
-            "KES 100/mo",
+            "KES 1,800 / year",
+            "KES 150/mo",
             recommended = true,
-            amountKes = 1200
+            amountKes = 1800
         ),
         PricingPlan(
             "monthly",
             "Monthly",
             "30 days, renew any time",
-            "KES 150/mo",
+            "KES 200/mo",
             recommended = false,
-            amountKes = 150
+            amountKes = 200
         )
     )
 }

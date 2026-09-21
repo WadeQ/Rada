@@ -69,7 +69,7 @@ fun DriveLockedScreen(onUpgrade: () -> Unit) {
             colors = ButtonDefaults.buttonColors(containerColor = RadaColors.Accent, contentColor = RadaColors.AccentInk),
             modifier = Modifier.fillMaxWidth().height(54.dp)
         ) {
-            Text("Go Pro · KES 150/month", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Text("Go Pro · KES 200/month", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
         }
         Spacer(Modifier.height(BOTTOM_BAR_CLEARANCE + 40.dp))
     }

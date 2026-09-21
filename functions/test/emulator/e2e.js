@@ -31,8 +31,8 @@ const user = async (uid) => (await db.collection("users").doc(uid).get()).data()
 
 (async () => {
   // 1. successful monthly payment grants 30 days of Pro
-  await seed("ws_ok", "u1", "monthly", 150);
-  let res = await post(body("ws_ok", 0, 150));
+  await seed("ws_ok", "u1", "monthly", 200);
+  let res = await post(body("ws_ok", 0, 200));
   assert.strictEqual(res.status, 200);
   assert.strictEqual((await pay("ws_ok")).status, "success");
   assert.strictEqual((await pay("ws_ok")).receipt, "TESTRCPT1");
@@ -41,36 +41,36 @@ const user = async (uid) => (await db.collection("users").doc(uid).get()).data()
   console.log("ok  success grants 30 days");
 
   // 2. Safaricom retries the same callback: nothing changes
-  await post(body("ws_ok", 0, 150));
+  await post(body("ws_ok", 0, 200));
   assert.strictEqual((await user("u1")).proUntil.toMillis(), until);
   console.log("ok  duplicate callback is ignored");
 
   // 3. renewing stacks on the remaining time
-  await seed("ws_renew", "u1", "annual", 1200);
-  await post(body("ws_renew", 0, 1200));
+  await seed("ws_renew", "u1", "annual", 1800);
+  await post(body("ws_renew", 0, 1800));
   assert.ok(Math.abs((await user("u1")).proUntil.toMillis() - (until + 365 * DAY)) < 60_000);
   console.log("ok  renewal stacks");
 
   // 4. wrong amount is rejected
-  await seed("ws_amt", "u2", "annual", 1200);
+  await seed("ws_amt", "u2", "annual", 1800);
   await post(body("ws_amt", 0, 1));
   assert.strictEqual((await pay("ws_amt")).status, "failed");
   assert.strictEqual((await user("u2")).proUntil, undefined);
   console.log("ok  wrong amount grants nothing");
 
   // 5. cancelled by the user
-  await seed("ws_cancel", "u3", "monthly", 150);
+  await seed("ws_cancel", "u3", "monthly", 200);
   await post(body("ws_cancel", 1032, 0, "Request Cancelled by user."));
   assert.strictEqual((await pay("ws_cancel")).status, "cancelled");
   assert.strictEqual((await user("u3")).proUntil, undefined);
   console.log("ok  cancel grants nothing");
 
   // 6. wrong token and unknown payment
-  await seed("ws_tok", "u4", "monthly", 150);
-  res = await post(body("ws_tok", 0, 150), "wrong");
+  await seed("ws_tok", "u4", "monthly", 200);
+  res = await post(body("ws_tok", 0, 200), "wrong");
   assert.strictEqual(res.status, 403);
   assert.strictEqual((await pay("ws_tok")).status, "pending");
-  res = await post(body("ws_nope", 0, 150));
+  res = await post(body("ws_nope", 0, 200));
   assert.strictEqual(res.status, 200);
   assert.strictEqual((await user("u4")).proUntil, undefined);
   console.log("ok  bad token rejected, unknown payment ignored");

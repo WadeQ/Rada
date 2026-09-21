@@ -1,6 +1,6 @@
 const PLANS = {
-  monthly: { amountKes: 150, days: 30, label: "Rada Pro monthly" },
-  annual: { amountKes: 1200, days: 365, label: "Rada Pro annual" },
+  monthly: { amountKes: 200, days: 30, label: "Rada Pro monthly" },
+  annual: { amountKes: 1800, days: 365, label: "Rada Pro annual" },
 };
 
 function planFor(planId) {

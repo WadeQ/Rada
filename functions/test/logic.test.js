@@ -17,8 +17,8 @@ test("phone normalisation", () => {
 });
 
 test("plans are server-defined", () => {
-  assert.strictEqual(planFor("monthly").amountKes, 150);
-  assert.strictEqual(planFor("annual").amountKes, 1200);
+  assert.strictEqual(planFor("monthly").amountKes, 200);
+  assert.strictEqual(planFor("annual").amountKes, 1800);
   assert.strictEqual(planFor("__proto__"), null);
   assert.strictEqual(planFor("free"), null);
 });
@@ -46,40 +46,40 @@ const FV = { serverTimestamp: () => "ts" };
 const ts = (ms) => ({ toMillis: () => ms });
 
 test("success extends Pro and is applied once", async () => {
-  const db = fakeDb({ status: "pending", uid: "u1", planId: "monthly", amount: 150 }, {});
-  const r = await applyResult(db, FV, "p1", { resultCode: 0, amount: 150, receipt: "ABC" });
+  const db = fakeDb({ status: "pending", uid: "u1", planId: "monthly", amount: 200 }, {});
+  const r = await applyResult(db, FV, "p1", { resultCode: 0, amount: 200, receipt: "ABC" });
   assert.strictEqual(r.status, "success");
   assert.ok(Math.abs(db.store.users.u1.proUntil.getTime() - (Date.now() + 30 * 864e5)) < 5000);
-  const again = await applyResult(db, FV, "p1", { resultCode: 0, amount: 150 });
+  const again = await applyResult(db, FV, "p1", { resultCode: 0, amount: 200 });
   assert.strictEqual(again.applied, false);
 });
 
 test("renewal stacks on remaining time", async () => {
   const future = Date.now() + 10 * 864e5;
-  const db = fakeDb({ status: "pending", uid: "u1", planId: "monthly", amount: 150 }, { proUntil: ts(future) });
-  await applyResult(db, FV, "p1", { resultCode: 0, amount: 150 });
+  const db = fakeDb({ status: "pending", uid: "u1", planId: "monthly", amount: 200 }, { proUntil: ts(future) });
+  await applyResult(db, FV, "p1", { resultCode: 0, amount: 200 });
   assert.ok(Math.abs(db.store.users.u1.proUntil.getTime() - (future + 30 * 864e5)) < 1000);
 });
 
 test("wrong amount, cancel and unknown payment never grant Pro", async () => {
-  let db = fakeDb({ status: "pending", uid: "u1", planId: "annual", amount: 1200 }, {});
+  let db = fakeDb({ status: "pending", uid: "u1", planId: "annual", amount: 1800 }, {});
   assert.strictEqual((await applyResult(db, FV, "p1", { resultCode: 0, amount: 1 })).status, "failed");
   assert.strictEqual(db.store.users.u1.proUntil, undefined);
-  db = fakeDb({ status: "pending", uid: "u1", planId: "annual", amount: 1200 }, {});
+  db = fakeDb({ status: "pending", uid: "u1", planId: "annual", amount: 1800 }, {});
   assert.strictEqual((await applyResult(db, FV, "p1", { resultCode: 1032 })).status, "cancelled");
-  assert.strictEqual((await applyResult(db, FV, "nope", { resultCode: 0, amount: 1200 })).applied, false);
+  assert.strictEqual((await applyResult(db, FV, "nope", { resultCode: 0, amount: 1800 })).applied, false);
 });
 
 test("callback metadata parsing", () => {
-  const stk = { CallbackMetadata: { Item: [{ Name: "Amount", Value: 150 }, { Name: "MpesaReceiptNumber", Value: "XYZ" }] } };
-  assert.deepStrictEqual(callbackFields(stk), { amount: 150, receipt: "XYZ" });
+  const stk = { CallbackMetadata: { Item: [{ Name: "Amount", Value: 200 }, { Name: "MpesaReceiptNumber", Value: "XYZ" }] } };
+  assert.deepStrictEqual(callbackFields(stk), { amount: 200, receipt: "XYZ" });
 });
 
 test("Daraja result codes get friendly messages", async () => {
   assert.match(friendlyMessage(1037), /couldn't reach your phone/);
   assert.match(friendlyMessage(2001), /PIN/);
   assert.match(friendlyMessage(9999), /didn't go through/);
-  const db = fakeDb({ status: "pending", uid: "u1", planId: "monthly", amount: 150 }, {});
+  const db = fakeDb({ status: "pending", uid: "u1", planId: "monthly", amount: 200 }, {});
   await applyResult(db, FV, "p1", { resultCode: 1037, resultDesc: "DS timeout user cannot be reached" });
   assert.strictEqual(db.store.payments.p1.status, "failed");
   assert.match(db.store.payments.p1.resultDesc, /couldn't reach your phone/);

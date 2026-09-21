@@ -75,7 +75,7 @@ struct DashboardView: View {
         HStack(spacing: 10) {
             Image(systemName: "checkmark.shield.fill").foregroundColor(.radaAccentText)
             VStack(alignment: .leading, spacing: 2) {
-                Text(isPro ? "You're on Pro" : "Go Pro · KES 150/month")
+                Text(isPro ? "You're on Pro" : "Go Pro · KES 200/month")
                     .font(.system(size: 13, weight: .medium)).foregroundColor(.radaTextPrimary)
                 Text(isPro ? "Real-time checkpoints, longer warnings and offline maps are on."
                            : "Crowd checkpoints, longer warning distance, offline maps.")
