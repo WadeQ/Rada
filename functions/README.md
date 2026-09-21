@@ -27,7 +27,7 @@ Non-secret settings go in `functions/.env.rada-app-78472` (git-ignored):
 ```
 MPESA_ENV=sandbox
 MPESA_SHORTCODE=174379
-MPESA_CALLBACK_BASE=https://mpesacallback-<hash>-ew.a.run.app   # the deployed mpesaCallback URL
+MPESA_CALLBACK_BASE=https://europe-west1-rada-app-78472.cloudfunctions.net/mpesaCallback
 ```
 
 ## Deploy
@@ -37,5 +37,5 @@ cd functions && npm install && npm test
 firebase deploy --only functions,firestore:rules
 ```
 
-First deploy: leave `MPESA_CALLBACK_BASE` empty, deploy, copy the `mpesaCallback` URL from the
-output into `.env`, then deploy again.
+All three values are required by the deploy (an empty `MPESA_CALLBACK_BASE` is fine on the first
+run). Deployed to `rada-app-78472` in `europe-west1`.
