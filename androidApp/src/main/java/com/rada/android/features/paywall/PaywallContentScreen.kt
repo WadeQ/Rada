@@ -131,25 +131,31 @@ fun PaywallContentScreen(
 
         Text("How do you want to pay?", color = RadaColors.TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(10.dp))
-        MethodCard(
+        val chosenPlan = state.plans[state.selectedPlanIndex]
+        val yearly = chosenPlan.id == "annual"
+        VisaStyleCard(
             selected = state.payMethod == PayMethod.PLAY,
-            title = "Google Play subscription",
-            badge = "Auto-renews",
-            description = when (state.playStatus) {
-                PlayStatus.UNAVAILABLE -> "Not available on this device or build yet."
-                else -> "Pay with a Visa or Mastercard (including M-PESA GlobalPay virtual cards) or M-Pesa through Google Play. Renews on its own every period; cancel any time in Google Play."
-            },
             enabled = state.playStatus != PlayStatus.UNAVAILABLE,
+            periodLabel = if (yearly) "yearly" else "monthly",
+            unavailableNote = if (state.playStatus == PlayStatus.UNAVAILABLE) "Not available on this device or build yet" else null,
             onClick = { onIntent(PaywallIntent.MethodSelected(PayMethod.PLAY)) }
         )
-        Spacer(Modifier.height(10.dp))
-        MethodCard(
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "Pay with a Visa or Mastercard, including M-PESA GlobalPay virtual cards, or M-Pesa through Google Play. Renews on its own; cancel any time in Google Play.",
+            color = RadaColors.TextMuted, fontSize = 11.5.sp, lineHeight = 16.sp
+        )
+        Spacer(Modifier.height(16.dp))
+        MpesaStyleCard(
             selected = state.payMethod == PayMethod.MPESA,
-            title = "M-Pesa, pay once",
-            badge = "No auto-renew",
-            description = "Approve an M-Pesa prompt on your phone. You get 30 days or a full year and pay again only when you choose to.",
-            enabled = true,
+            amountLabel = "KES ${chosenPlan.amountKes}",
+            periodLabel = if (yearly) "One year" else "30 days",
             onClick = { onIntent(PaywallIntent.MethodSelected(PayMethod.MPESA)) }
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "Approve an M-Pesa prompt on your phone with your PIN. Pay again only when you choose to.",
+            color = RadaColors.TextMuted, fontSize = 11.5.sp, lineHeight = 16.sp
         )
         Spacer(Modifier.height(16.dp))
 
@@ -192,6 +198,8 @@ fun PaywallContentScreen(
             SlideToConfirm(
                 label = "Slide to pay with M-Pesa",
                 doneLabel = state.statusMessage ?: "Processing",
+                accent = PayBrand.MpesaGreen,
+                accentInk = Color.White,
                 enabled = state.phoneInput.isNotBlank() && !state.isProcessing,
                 onConfirm = { onIntent(PaywallIntent.PayTapped) }
             )
@@ -206,6 +214,8 @@ fun PaywallContentScreen(
             SlideToConfirm(
                 label = "Slide to subscribe with Google Play",
                 doneLabel = state.statusMessage ?: "Processing",
+                accent = PayBrand.VisaBlue,
+                accentInk = Color.White,
                 enabled = state.playStatus == PlayStatus.AVAILABLE && !state.isProcessing,
                 onConfirm = { onIntent(PaywallIntent.PlaySubscribeTapped) }
             )
@@ -224,48 +234,5 @@ fun PaywallContentScreen(
         ) {
             Text("Restore purchase")
         }
-    }
-}
-
-@Composable
-private fun MethodCard(
-    selected: Boolean,
-    title: String,
-    badge: String,
-    description: String,
-    enabled: Boolean,
-    onClick: () -> Unit
-) {
-    val shape = RoundedCornerShape(18.dp)
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(if (selected) RadaColors.Accent.copy(alpha = 0.08f) else Color.Transparent)
-            .border(1.dp, if (selected) RadaColors.Accent else RadaColors.Ink3, shape)
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(14.dp)
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                title,
-                color = if (enabled) RadaColors.TextPrimary else RadaColors.TextMuted,
-                fontSize = 13.5.sp,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                badge,
-                color = if (selected) RadaColors.AccentInk else RadaColors.TextSecondary,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(if (selected) RadaColors.Accent else RadaColors.Ink3)
-                    .padding(horizontal = 8.dp, vertical = 2.dp)
-            )
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(description, color = RadaColors.TextMuted, fontSize = 11.5.sp, lineHeight = 16.sp)
     }
 }

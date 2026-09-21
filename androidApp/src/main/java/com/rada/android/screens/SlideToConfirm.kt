@@ -31,6 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.rada.android.theme.RadaColors
 import kotlinx.coroutines.launch
@@ -42,6 +43,8 @@ fun SlideToConfirm(
     doneLabel: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    accent: Color = RadaColors.Accent,
+    accentInk: Color = RadaColors.AccentInk,
     onConfirm: () -> Unit
 ) {
     val handleSizeDp = 44.dp
@@ -76,7 +79,7 @@ fun SlideToConfirm(
             Modifier
                 .fillMaxSize()
                 .background(
-                    if (confirmed) RadaColors.Accent else RadaColors.Accent.copy(
+                    if (confirmed) accent else accent.copy(
                         alpha = (if (maxOffset > 0f) (handleOffset.value / maxOffset).coerceIn(0f, 1f) else 0f) * disabledAlpha
                     )
                 )
@@ -84,7 +87,7 @@ fun SlideToConfirm(
 
         Text(
             text = if (confirmed) doneLabel else label,
-            color = (if (confirmed) RadaColors.AccentInk else RadaColors.TextSecondary).copy(alpha = disabledAlpha),
+            color = (if (confirmed) accentInk else RadaColors.TextSecondary).copy(alpha = disabledAlpha),
             modifier = Modifier.align(Alignment.Center)
         )
 
@@ -94,7 +97,7 @@ fun SlideToConfirm(
                 .offset { IntOffset(handleOffset.value.roundToInt(), 0) }
                 .size(handleSizeDp)
                 .clip(CircleShape)
-                .background(RadaColors.Accent.copy(alpha = disabledAlpha))
+                .background(accent.copy(alpha = disabledAlpha))
                 .pointerInput(maxOffset, enabled) {
                     if (!enabled) return@pointerInput
                     detectDragGestures(
@@ -125,7 +128,7 @@ fun SlideToConfirm(
             Icon(
                 Icons.Filled.ArrowForward,
                 contentDescription = "Slide to confirm",
-                tint = RadaColors.AccentInk.copy(alpha = disabledAlpha)
+                tint = accentInk.copy(alpha = disabledAlpha)
             )
         }
     }

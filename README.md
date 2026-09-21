@@ -63,6 +63,9 @@ eye. 👁️
     <td align="center"><img src="docs/screenshots/06-help.png" width="190"><br><sub>Roadside help</sub></td>
     <td align="center"><img src="docs/screenshots/12-settings.png" width="190"><br><sub>Settings</sub></td>
   </tr>
+  <tr>
+    <td align="center" colspan="3"><img src="docs/screenshots/13-paywall.png" width="190"><br><sub>Go Pro: pay by card through Google Play, or M-Pesa</sub></td>
+  </tr>
 </table>
 
 <p align="center"><sub>Android, captured on an emulator. Alerts and chart data in these shots are test reports.</sub></p>
