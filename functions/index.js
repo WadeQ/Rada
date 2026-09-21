@@ -82,6 +82,7 @@ exports.mpesaCallback = onRequest({ region: REGION, secrets: SECRETS }, async (r
   }
   const stk = req.body && req.body.Body && req.body.Body.stkCallback;
   if (stk && stk.CheckoutRequestID) {
+    console.log("stk callback", stk.CheckoutRequestID, stk.ResultCode, stk.ResultDesc);
     try {
       await applyResult(db, FieldValue, stk.CheckoutRequestID, {
         resultCode: stk.ResultCode,
@@ -106,6 +107,7 @@ exports.queryMpesaPayment = onCall({ region: REGION, secrets: SECRETS }, async (
   const age = Date.now() - (snap.data().createdAt ? snap.data().createdAt.toMillis() : 0);
   if (snap.data().status === "pending" && age > 20_000) {
     const q = await daraja().stkQuery(id);
+    console.log("stk query", id, q.status, JSON.stringify(q.json));
     if (q.ok && q.json.ResultCode !== undefined) {
       await applyResult(db, FieldValue, id, { resultCode: q.json.ResultCode, resultDesc: q.json.ResultDesc });
       snap = await ref.get();
