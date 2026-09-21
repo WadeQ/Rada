@@ -18,6 +18,7 @@ import com.rada.shared.location.AndroidLocationProvider
 @Composable
 fun DashboardRouteScreen(
     isPro: Boolean,
+    proUntilMillis: Long? = null,
     trial: TrialState,
     onDrive: () -> Unit,
     onReport: () -> Unit,
@@ -48,6 +49,7 @@ fun DashboardRouteScreen(
     DashboardContentScreen(
         state = state,
         isPro = isPro,
+        proUntilMillis = proUntilMillis,
         trial = trial,
         onDrive = onDrive,
         onReport = onReport,

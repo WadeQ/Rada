@@ -58,6 +58,7 @@ import com.rada.shared.domain.ReportType
 fun DashboardContentScreen(
     state: DashboardState,
     isPro: Boolean,
+    proUntilMillis: Long? = null,
     trial: TrialState,
     onDrive: () -> Unit,
     onReport: () -> Unit,
@@ -145,7 +146,7 @@ fun DashboardContentScreen(
                     )
                     Text(
                         when {
-                            isPro -> "Real-time checkpoints, longer warnings and offline maps are on."
+                            isPro -> proUntilMillis?.let { "Active until ${java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault()).format(java.util.Date(it))}." } ?: "Real-time checkpoints, longer warnings and offline maps are on."
                             trial is TrialState.Active -> "Full Drive access. Go Pro to keep it after the trial."
                             trial is TrialState.Expired -> "Go Pro · KES 150/month to keep using Drive."
                             else -> "Try Drive free for ${TrialPreferences.TRIAL_DAYS} days, then KES 150/month."

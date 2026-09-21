@@ -6,11 +6,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rada.android.data.FirebaseAuthRepository
+import com.rada.android.data.ProRepository
 
 @Composable
 fun PaywallRouteScreen(onTrialStarted: () -> Unit) {
     val viewModel: PaywallViewModel = viewModel {
-        PaywallViewModel(FirebaseAuthRepository(), StubPaymentRepository())
+        PaywallViewModel(FirebaseAuthRepository(), MpesaPaymentRepository(), ProRepository())
     }
     val state by viewModel.state.collectAsState()
 

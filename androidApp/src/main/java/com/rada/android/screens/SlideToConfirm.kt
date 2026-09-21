@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,6 +51,15 @@ fun SlideToConfirm(
     val scope = rememberCoroutineScope()
     val density = androidx.compose.ui.platform.LocalDensity.current
     val handleSizePx = with(density) { handleSizeDp.toPx() }
+
+    LaunchedEffect(enabled, confirmed) {
+        if (!confirmed) return@LaunchedEffect
+        if (enabled) delay(RESET_AFTER_MS)
+        if (enabled) {
+            confirmed = false
+            handleOffset.snapTo(0f)
+        }
+    }
 
     Box(
         modifier = modifier
@@ -119,3 +130,5 @@ fun SlideToConfirm(
         }
     }
 }
+
+private const val RESET_AFTER_MS = 800L

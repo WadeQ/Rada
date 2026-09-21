@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import kotlinx.coroutines.delay
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
@@ -28,6 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.rada.android.data.ProRepository
 import com.rada.android.data.TrialPreferences
 import com.rada.android.data.TrialState
 import com.rada.android.features.dashboard.DashboardRouteScreen
@@ -56,7 +59,16 @@ private fun NavController.navigateToTab(route: String) {
 @Composable
 fun RadaNavHost() {
     val navController = rememberNavController()
-    var isPro by remember { mutableStateOf(false) }
+    val proRepository = remember { ProRepository() }
+    val proUntil by proRepository.proUntilMillis.collectAsState(initial = null)
+    var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000L)
+            nowMillis = System.currentTimeMillis()
+        }
+    }
+    val isPro = proUntil?.let { it > nowMillis } == true
     val appContext = LocalContext.current.applicationContext
     val trialPrefs = remember { TrialPreferences(appContext) }
     val trial by trialPrefs.state.collectAsState(initial = TrialState.Loading)
@@ -162,6 +174,7 @@ fun RadaNavHost() {
             composable(RadaDestination.Dashboard.route) {
                 DashboardRouteScreen(
                     isPro = isPro,
+                    proUntilMillis = proUntil,
                     trial = trial,
                     onDrive = { navController.navigateToTab(RadaDestination.Drive.route) },
                     onReport = { navController.navigateToTab(RadaDestination.Report.route) },
@@ -247,7 +260,6 @@ fun RadaNavHost() {
 
             composable(RadaDestination.Paywall.route) {
                 PaywallRouteScreen(onTrialStarted = {
-                    isPro = true
                     navController.navigate(RadaDestination.Dashboard.route) {
                         popUpTo(RadaDestination.Dashboard.route) { inclusive = true }
                     }
