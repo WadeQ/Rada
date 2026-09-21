@@ -1,9 +1,7 @@
 package com.rada.android.features.settings
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
@@ -16,8 +14,6 @@ import com.rada.android.data.FirebaseAuthRepository
 import com.rada.android.data.ProfilePhotoStore
 import com.rada.android.data.ThemePreferences
 import com.rada.android.data.UserProfilePreferences
-import com.rada.android.tracking.AlertSpeaker
-import com.rada.shared.domain.ReportType
 
 @Composable
 fun SettingsRouteScreen(
@@ -38,8 +34,6 @@ fun SettingsRouteScreen(
         )
     }
     val state by viewModel.state.collectAsState()
-    val speaker = remember { AlertSpeaker(context) }
-    DisposableEffect(Unit) { onDispose { speaker.release() } }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
@@ -58,7 +52,6 @@ fun SettingsRouteScreen(
         onPickPhoto = {
             photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         },
-        onTestSound = { speaker.warn(ReportType.CAMERA, 300, "Thika Road") },
         onIntent = viewModel::onIntent,
         onHome = onHome,
         onDrive = onDrive,

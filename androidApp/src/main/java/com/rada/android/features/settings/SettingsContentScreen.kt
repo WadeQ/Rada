@@ -24,7 +24,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Notifications
@@ -64,7 +63,6 @@ fun SettingsContentScreen(
     state: SettingsState,
     onIntent: (SettingsIntent) -> Unit,
     onPickPhoto: () -> Unit,
-    onTestSound: () -> Unit = {},
     onHome: () -> Unit,
     onDrive: () -> Unit,
     onReport: () -> Unit,
@@ -107,13 +105,6 @@ fun SettingsContentScreen(
                 )
                 RowDivider()
                 LeadRow(state.warningLead) { onIntent(SettingsIntent.WarningLeadSelected(it)) }
-                RowDivider()
-                ActionRow(
-                    icon = Icons.AutoMirrored.Outlined.VolumeUp,
-                    title = "Test alert sound",
-                    subtitle = "Plays the chime and voice warning at your current volume",
-                    onClick = onTestSound
-                )
                 RowDivider()
                 val darkOn = when (state.themeMode) {
                     ThemeMode.DARK -> true
@@ -304,25 +295,6 @@ private fun LeadRow(selected: WarningLead, onSelect: (WarningLead) -> Unit) {
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun ActionRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(start = 16.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        Spacer(Modifier.width(16.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, color = colors.onSurface, fontSize = 15.sp)
-            Text(subtitle, color = colors.onSurfaceVariant, fontSize = 12.sp)
         }
     }
 }

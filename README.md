@@ -50,8 +50,7 @@ eye.
   the newest alerts near you (with “See all”), and the Pro upgrade banner.
 - **Roadside help.** Emergency numbers, tow companies and mechanics, one tap to call.
 - **Settings.** Profile photo, name, alert notifications, how early warnings fire (Standard,
-  Early or Earliest, from about 7 to 14 seconds ahead), a test button for the alert sound, and a
-  dark-mode switch. Everything saves
+  Early or Earliest, from about 7 to 14 seconds ahead) and a dark-mode switch. Everything saves
   as you change it; there is no Save button.
 - **Rada Pro.** A paid tier (KES 150/month or KES 1,200/year) that promises real-time crowd
   checkpoints, longer warning distance and offline maps. Only the paywall and the alcohol-check
