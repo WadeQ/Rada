@@ -16,18 +16,23 @@ eye.
 <table align="center">
   <tr>
     <td align="center"><img src="docs/screenshots/01-splash.png" width="190"><br><sub>Splash</sub></td>
+    <td align="center"><img src="docs/screenshots/09-onboarding-cameras.png" width="190"><br><sub>Onboarding: cameras</sub></td>
+    <td align="center"><img src="docs/screenshots/10-onboarding-privacy.png" width="190"><br><sub>Onboarding: privacy</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/11-onboarding-alerts.png" width="190"><br><sub>Onboarding: alerts</sub></td>
+    <td align="center"><img src="docs/screenshots/08-create-account.png" width="190"><br><sub>Create account</sub></td>
+    <td align="center"><img src="docs/screenshots/07-sign-in.png" width="190"><br><sub>Sign in</sub></td>
+  </tr>
+  <tr>
     <td align="center"><img src="docs/screenshots/02-home.png" width="190"><br><sub>Home (dark)</sub></td>
     <td align="center"><img src="docs/screenshots/03-home-light.png" width="190"><br><sub>Home (light)</sub></td>
+    <td align="center"><img src="docs/screenshots/04-drive.png" width="190"><br><sub>Drive mode</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/04-drive.png" width="190"><br><sub>Drive mode</sub></td>
     <td align="center"><img src="docs/screenshots/05-report.png" width="190"><br><sub>One-tap reporting</sub></td>
     <td align="center"><img src="docs/screenshots/06-help.png" width="190"><br><sub>Roadside help</sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/screenshots/07-sign-in.png" width="190"><br><sub>Sign in</sub></td>
-    <td align="center"><img src="docs/screenshots/08-create-account.png" width="190"><br><sub>Create account</sub></td>
-    <td></td>
+    <td align="center"><img src="docs/screenshots/12-settings.png" width="190"><br><sub>Settings</sub></td>
   </tr>
 </table>
 
