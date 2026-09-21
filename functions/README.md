@@ -49,3 +49,21 @@ run). Deployed to `rada-app-78472` in `europe-west1`.
   Needs **JDK 21+** on the path. Uses dummy secrets from `functions/.secret.local` (git-ignored;
   create it with `MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`, `MPESA_PASSKEY` and
   `MPESA_CALLBACK_TOKEN=local-test-token`).
+
+## Google Play subscriptions (cards, GlobalPay, M-Pesa through Google)
+
+`verifyPlaySubscription` checks a purchase with the Google Play Developer API and grants Pro;
+`playNotifications` (Pub/Sub topic `play-rtdn`) keeps it in sync on renewals, cancellations and
+refunds. Both routes end in the same `users/{uid}.proUntil` (the later of M-Pesa and Play time).
+
+One-time setup in Google Play Console:
+
+1. **Subscriptions** (Monetize → Products → Subscriptions): create `rada_pro_monthly` (KES 150, every
+   month) and `rada_pro_annual` (KES 1,200, every year), each with one base plan set to auto-renew.
+2. **API access** (Setup → API access): link the Google Cloud project `rada-app-78472`, then invite
+   the service account `216725826063-compute@developer.gserviceaccount.com` and grant it
+   "View financial data" and "Manage orders and subscriptions".
+3. **Real-time notifications** (Monetize → Monetization setup): set the topic to
+   `projects/rada-app-78472/topics/play-rtdn`, subscription notifications only, and send a test.
+4. **Testing:** upload a build to the internal testing track and add yourself as a licence tester so
+   test purchases are free and renew quickly.

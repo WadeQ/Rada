@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -39,6 +41,7 @@ fun PaywallContentScreen(
 ) {
     Column(modifier = modifier
         .fillMaxSize()
+        .verticalScroll(rememberScrollState())
         .padding(horizontal = 22.dp, vertical = 30.dp)) {
         Text(
             "Go Pro",
@@ -124,21 +127,55 @@ fun PaywallContentScreen(
             }
         }
 
-        Spacer(Modifier.weight(1f))
+        Spacer(Modifier.height(18.dp))
 
-        Text("M-Pesa number", color = RadaColors.TextSecondary, fontSize = 11.5.sp)
-        Spacer(Modifier.height(4.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("+254", color = RadaColors.TextSecondary, modifier = Modifier.padding(end = 8.dp))
-            OutlinedTextField(
-                value = state.phoneInput,
-                onValueChange = { onIntent(PaywallIntent.PhoneChanged(it)) },
-                placeholder = { Text("Enter M-Pesa number") },
-                singleLine = true,
-                isError = state.errorMessage != null,
-                colors = radaFieldColors(),
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier.fillMaxWidth()
+        Text("How do you want to pay?", color = RadaColors.TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        Spacer(Modifier.height(10.dp))
+        MethodCard(
+            selected = state.payMethod == PayMethod.PLAY,
+            title = "Google Play subscription",
+            badge = "Auto-renews",
+            description = when (state.playStatus) {
+                PlayStatus.UNAVAILABLE -> "Not available on this device or build yet."
+                else -> "Pay with a Visa or Mastercard (including M-PESA GlobalPay virtual cards) or M-Pesa through Google Play. Renews on its own every period; cancel any time in Google Play."
+            },
+            enabled = state.playStatus != PlayStatus.UNAVAILABLE,
+            onClick = { onIntent(PaywallIntent.MethodSelected(PayMethod.PLAY)) }
+        )
+        Spacer(Modifier.height(10.dp))
+        MethodCard(
+            selected = state.payMethod == PayMethod.MPESA,
+            title = "M-Pesa, pay once",
+            badge = "No auto-renew",
+            description = "Approve an M-Pesa prompt on your phone. You get 30 days or a full year and pay again only when you choose to.",
+            enabled = true,
+            onClick = { onIntent(PaywallIntent.MethodSelected(PayMethod.MPESA)) }
+        )
+        Spacer(Modifier.height(16.dp))
+
+        if (state.payMethod == PayMethod.MPESA) {
+            Text("M-Pesa number", color = RadaColors.TextSecondary, fontSize = 11.5.sp)
+            Spacer(Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("+254", color = RadaColors.TextSecondary, modifier = Modifier.padding(end = 8.dp))
+                OutlinedTextField(
+                    value = state.phoneInput,
+                    onValueChange = { onIntent(PaywallIntent.PhoneChanged(it)) },
+                    placeholder = { Text("Enter M-Pesa number") },
+                    singleLine = true,
+                    isError = state.errorMessage != null,
+                    colors = radaFieldColors(),
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        } else {
+            val plan = state.plans[state.selectedPlanIndex]
+            val price = state.playPrices[plan.id] ?: plan.priceLabel
+            Text(
+                "$price, billed by Google Play",
+                color = RadaColors.TextSecondary,
+                fontSize = 12.sp
             )
         }
         if (state.errorMessage != null) {
@@ -151,19 +188,35 @@ fun PaywallContentScreen(
         }
         Spacer(Modifier.height(12.dp))
 
-        SlideToConfirm(
-            label = "Slide to pay with M-Pesa",
-            doneLabel = state.statusMessage ?: "Processing",
-            enabled = state.phoneInput.isNotBlank() && !state.isProcessing,
-            onConfirm = { onIntent(PaywallIntent.PayTapped) }
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "You'll get an M-Pesa prompt on your phone to enter your PIN.",
-            color = RadaColors.TextMuted, fontSize = 11.sp,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
+        if (state.payMethod == PayMethod.MPESA) {
+            SlideToConfirm(
+                label = "Slide to pay with M-Pesa",
+                doneLabel = state.statusMessage ?: "Processing",
+                enabled = state.phoneInput.isNotBlank() && !state.isProcessing,
+                onConfirm = { onIntent(PaywallIntent.PayTapped) }
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "You'll get an M-Pesa prompt on your phone to enter your PIN.",
+                color = RadaColors.TextMuted, fontSize = 11.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
+            SlideToConfirm(
+                label = "Slide to subscribe with Google Play",
+                doneLabel = state.statusMessage ?: "Processing",
+                enabled = state.playStatus == PlayStatus.AVAILABLE && !state.isProcessing,
+                onConfirm = { onIntent(PaywallIntent.PlaySubscribeTapped) }
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Google Play shows your saved cards and asks you to confirm.",
+                color = RadaColors.TextMuted, fontSize = 11.sp,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
         Spacer(Modifier.height(10.dp))
         OutlinedButton(
             onClick = { onIntent(PaywallIntent.RestoreTapped) },
@@ -171,5 +224,48 @@ fun PaywallContentScreen(
         ) {
             Text("Restore purchase")
         }
+    }
+}
+
+@Composable
+private fun MethodCard(
+    selected: Boolean,
+    title: String,
+    badge: String,
+    description: String,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    val shape = RoundedCornerShape(18.dp)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(if (selected) RadaColors.Accent.copy(alpha = 0.08f) else Color.Transparent)
+            .border(1.dp, if (selected) RadaColors.Accent else RadaColors.Ink3, shape)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(14.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                title,
+                color = if (enabled) RadaColors.TextPrimary else RadaColors.TextMuted,
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                badge,
+                color = if (selected) RadaColors.AccentInk else RadaColors.TextSecondary,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (selected) RadaColors.Accent else RadaColors.Ink3)
+                    .padding(horizontal = 8.dp, vertical = 2.dp)
+            )
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(description, color = RadaColors.TextMuted, fontSize = 11.5.sp, lineHeight = 16.sp)
     }
 }

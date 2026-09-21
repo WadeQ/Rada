@@ -120,27 +120,48 @@ flowchart LR
 | 📅 **Monthly** | KES 150 for 30 days | Keep Drive after the trial, plus alcohol-check alerts |
 | 🏆 **Annual** | KES 1,200 for 365 days | Everything in Monthly, about KES 100 a month |
 
-Payment is **M-Pesa STK push** through Safaricom's **Daraja** API. Pro is time-boxed (`proUntil`),
-not an auto-renewing subscription, and renewals stack on the time you have left.
+Two ways to pay, side by side on the paywall, so everyone can use what they already have:
+
+| | 🟢 **Google Play subscription** | 💚 **M-Pesa, pay once** |
+|---|---|---|
+| Best for | Hands-off, automatic renewal | Paying straight from your M-Pesa balance |
+| Pay with | Visa or Mastercard (including **M-PESA GlobalPay** virtual cards), or M-Pesa through Google Play | M-Pesa STK push |
+| Renewal | **Automatic**, cancel any time in Google Play | Manual: pay again when you like |
+| Built on | Google Play Billing | Safaricom Daraja |
+
+Both routes write the same entitlement, `proUntil` on the account: the later of the two expiries
+wins, so switching or combining never loses paid time.
 
 ```mermaid
 sequenceDiagram
     participant App as 📱 Rada app
     participant F as ☁️ Cloud Functions
-    participant D as 🟢 Daraja / M-Pesa
+    participant P as 🟢 Google Play
+    participant D as 💚 Daraja / M-Pesa
     participant DB as 🔥 Firestore
+    rect rgb(40, 60, 40)
+    Note over App,DB: Google Play subscription
+    App->>P: subscribe (card, GlobalPay or M-Pesa)
+    App->>F: verifyPlaySubscription(purchase token)
+    F->>P: check the purchase
+    P-->>F: state and expiry
+    F->>DB: playProUntil, then proUntil
+    P->>F: renewal / cancel / refund notifications
+    end
+    rect rgb(30, 55, 45)
+    Note over App,DB: M-Pesa, pay once
     App->>F: initiateMpesaPayment(phone, plan)
     F->>D: STK push (price set server-side)
-    D-->>App: M-Pesa PIN prompt on the phone
     D->>F: callback (secret token)
-    F->>DB: verify amount, mark paid, extend proUntil
-    App->>F: poll queryMpesaPayment
+    F->>DB: verify amount, mpesaProUntil, then proUntil
+    end
     DB-->>App: proUntil changes, Pro unlocks
 ```
 
-The app never sees Daraja credentials. Prices live on the server, callbacks are authenticated with
-a secret token and processed exactly once, and only Cloud Functions can write `proUntil`. Details
-are in [`functions/README.md`](functions/README.md).
+The app never sees Daraja credentials. Prices for M-Pesa live on the server, callbacks are
+authenticated with a secret token and processed exactly once, a Play purchase is bound to the
+account that bought it, and only Cloud Functions can write entitlements. Details are in
+[`functions/README.md`](functions/README.md).
 
 ## 🔐 Accounts and security
 
@@ -188,7 +209,7 @@ real email address at sign-up and store it on the account.
 | 📍 | Location | **Play Services Fused Location** + a foreground service | One high-accuracy request while Drive is tracking, kept alive in the background. |
 | 🗺️ | Maps | **Maps Compose** (Google Maps SDK) | Fastest route to a good map with a custom animated car marker. |
 | 🔊 | Audio | **AudioTrack chimes + Android TextToSpeech** | No audio assets to ship; navigation-guidance audio focus ducks your music. |
-| 💚 | Payments | **M-Pesa Daraja STK push** | The way Kenyans already pay. |
+| 💚 | Payments | **Google Play Billing** + **M-Pesa Daraja STK push** | Cards, GlobalPay and automatic renewal through Play; M-Pesa for people who want to pay directly. |
 | ⚡ | Async | **Kotlin Coroutines / Flow** | Location, Firestore and DataStore are all streams. |
 | 🛠️ | Build | Gradle Kotlin DSL · AGP 8.13 · Kotlin 2.3 · JDK 17 · minSdk 26 · targetSdk 36 · Node 24 for functions | |
 
@@ -221,12 +242,12 @@ Legend: ✅ working · 🧪 tested, needs a live check · 🚧 in progress · �
 | ✅ | Free trial tied to the account | Verified: wiping app data no longer restarts it |
 | ✅ | Firestore security rules | Published and covered by emulator tests |
 | 🧪 | M-Pesa payments | Verified against the Daraja sandbox and the emulator suite; **waiting on a production Till** for a live payment |
+| 🧪 | Google Play subscriptions | App, verification and notification handling built and unit-tested; **needs the Play Console setup** (products, API access) before a real purchase |
 | 🧪 | Google sign-in | Implemented; needs the SHA-1 registered, then a device check |
 | 🚧 | Apple sign-in | Implemented; needs Apple Developer setup |
 | 🚧 | iOS app | A SwiftUI prototype with mock data; no location, map or sign-in yet |
 | 🔜 | Password recovery | Collect a real email at sign-up |
 | 🔜 | Renewal reminders | A nudge a few days before Pro ends |
-| 🔜 | M-Pesa Global Pay | An option for virtual-card users |
 | 🔜 | Offline maps | Promised on the paywall, not built yet |
 | 🔜 | Remaining camera coordinates | See [`docs/cameras-todo.md`](docs/cameras-todo.md) |
 
