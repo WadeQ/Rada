@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,12 +30,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
@@ -48,8 +50,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rada.shared.domain.ReportType
-import kotlin.math.max
-import kotlin.math.min
 
 private fun seriesColor(type: ReportType, dark: Boolean): Color = when (type) {
     ReportType.CAMERA -> if (dark) Color(0xFFC98500) else Color(0xFFEDA100)
@@ -76,7 +76,7 @@ fun WeeklyReportsChart(bars: List<DayBar>, modifier: Modifier = Modifier) {
     val dark = colors.background.luminance() < 0.5f
     val week = bars.ifEmpty { EmptyWeek }
     val weekTotal = week.sumOf { it.total }
-    val axisMax = niceMax(week.maxOfOrNull { it.total } ?: 0)
+    val axisMax = niceMax(week.maxOfOrNull { day -> day.counts.values.maxOrNull() ?: 0 } ?: 0)
     var selected by rememberSaveable { mutableStateOf<Int?>(null) }
     val selectedDay = selected?.let { week.getOrNull(it) }
 
@@ -133,8 +133,6 @@ fun WeeklyReportsChart(bars: List<DayBar>, modifier: Modifier = Modifier) {
                 val topPad = 8.dp.toPx()
                 val plotH = size.height - topPad
                 val slotW = (size.width - gutterPx) / 7f
-                val barW = min(slotW * 0.56f, 26.dp.toPx())
-                val gap = 2.dp.toPx()
                 val labelStyle = TextStyle(fontSize = 9.sp, color = mutedInk)
 
                 for (tick in intArrayOf(0, axisMax / 2, axisMax)) {
@@ -147,38 +145,39 @@ fun WeeklyReportsChart(bars: List<DayBar>, modifier: Modifier = Modifier) {
                     drawText(text, topLeft = Offset(gutterPx - text.size.width - 6.dp.toPx(), y - text.size.height / 2f))
                 }
 
-                week.forEachIndexed { i, day ->
-                    val cx = gutterPx + slotW * (i + 0.5f)
-                    if (selected == i) {
-                        drawRoundRect(
-                            gridInk.copy(alpha = 0.06f),
-                            topLeft = Offset(cx - slotW / 2f + 2.dp.toPx(), topPad - 6.dp.toPx()),
-                            size = Size(slotW - 4.dp.toPx(), plotH + 6.dp.toPx()),
-                            cornerRadius = CornerRadius(10.dp.toPx())
-                        )
-                    }
-                    val p = (progress.value * 1.5f - i * 0.08f).coerceIn(0f, 1f)
-                    val alpha = if (selected != null && selected != i) 0.45f else 1f
-                    val present = ReportType.entries.filter { (day.counts[it] ?: 0) > 0 }
-                    var y = size.height
-                    present.forEachIndexed { k, type ->
-                        val h = max((day.counts.getValue(type).toFloat() / axisMax) * plotH, 3.dp.toPx()) * p
-                        if (h <= 0f) return@forEachIndexed
-                        val yTop = y - h
-                        val yBottom = y - if (k > 0) gap else 0f
-                        val isTop = k == present.lastIndex
-                        val r = if (isTop) min(4.dp.toPx(), (yBottom - yTop) / 2f) else 0f
+                fun xAt(i: Int) = gutterPx + slotW * (i + 0.5f)
+                fun yAt(count: Int) = size.height - count.toFloat() / axisMax * plotH
+
+                selected?.let { i ->
+                    drawLine(
+                        gridInk.copy(alpha = 0.14f),
+                        Offset(xAt(i), topPad - 4.dp.toPx()), Offset(xAt(i), size.height), strokeWidth = 1.dp.toPx()
+                    )
+                }
+
+                clipRect(right = gutterPx + (size.width - gutterPx) * progress.value) {
+                    ReportType.entries.forEach { type ->
+                        val color = seriesColor(type, dark)
+                        val counts = week.map { it.counts[type] ?: 0 }
                         val path = Path().apply {
-                            addRoundRect(
-                                RoundRect(
-                                    left = cx - barW / 2f, top = yTop, right = cx + barW / 2f, bottom = yBottom,
-                                    topLeftCornerRadius = CornerRadius(r), topRightCornerRadius = CornerRadius(r),
-                                    bottomLeftCornerRadius = CornerRadius.Zero, bottomRightCornerRadius = CornerRadius.Zero
-                                )
-                            )
+                            moveTo(xAt(0), yAt(counts[0]))
+                            for (i in 1..6) {
+                                val midX = (xAt(i - 1) + xAt(i)) / 2f
+                                cubicTo(midX, yAt(counts[i - 1]), midX, yAt(counts[i]), xAt(i), yAt(counts[i]))
+                            }
                         }
-                        drawPath(path, seriesColor(type, dark).copy(alpha = alpha))
-                        y = yTop
+                        drawPath(path, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+                    }
+                    for (i in 0..6) {
+                        val isSelected = selected == i
+                        ReportType.entries.forEach { type ->
+                            val count = week[i].counts[type] ?: 0
+                            if (count == 0 && !isSelected) return@forEach
+                            val center = Offset(xAt(i), yAt(count))
+                            val r = 5f - type.ordinal * 1.25f + if (isSelected) 1f else 0f
+                            if (type.ordinal == 0) drawCircle(colors.surface, radius = (r + 1.5f).dp.toPx(), center = center)
+                            drawCircle(seriesColor(type, dark), radius = r.dp.toPx(), center = center)
+                        }
                     }
                 }
             }
@@ -213,7 +212,7 @@ fun WeeklyReportsChart(bars: List<DayBar>, modifier: Modifier = Modifier) {
             ReportType.entries.forEach { type ->
                 val count = selectedDay?.counts?.get(type) ?: week.sumOf { it.counts[type] ?: 0 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(10.dp).clip(RoundedCornerShape(3.dp)).background(seriesColor(type, dark)))
+                    Box(Modifier.size(10.dp).clip(CircleShape).background(seriesColor(type, dark)))
                     Spacer(Modifier.width(6.dp))
                     Text("${typeLabel(type)} $count", color = colors.onSurfaceVariant, fontSize = 12.sp)
                 }

@@ -46,7 +46,7 @@ eye.
 - **One-tap reporting.** Camera, checkpoint or alcohol check, one tap each. The tile floods with
   its colour, you feel a haptic confirmation, and an **Undo** chip stays for five seconds so a
   mis-tap while driving is recoverable. A “this week” counter shows how many reports you made.
-- **Home dashboard.** Estimated fines avoided, a stacked weekly chart of reports by type,
+- **Home dashboard.** Estimated fines avoided, a weekly line chart of reports by type,
   the newest alerts near you (with “See all”), and the Pro upgrade banner.
 - **Roadside help.** Emergency numbers, tow companies and mechanics, one tap to call.
 - **Settings.** Profile photo, name, alert notifications and a dark-mode switch. Everything saves
