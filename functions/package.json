@@ -2,12 +2,19 @@
   "name": "rada-functions",
   "private": true,
   "main": "index.js",
-  "engines": { "node": "24" },
+  "engines": {
+    "node": "24"
+  },
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "test:e2e": "firebase emulators:exec --only functions,firestore --project rada-app-78472 \"node test/emulator/e2e.js && node test/emulator/rules.js\""
   },
   "dependencies": {
     "firebase-admin": "^14.4.0",
     "firebase-functions": "^7.4.0"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.0.0"
   }
 }

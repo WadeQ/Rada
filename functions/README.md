@@ -39,3 +39,13 @@ firebase deploy --only functions,firestore:rules
 
 All three values are required by the deploy (an empty `MPESA_CALLBACK_BASE` is fine on the first
 run). Deployed to `rada-app-78472` in `europe-west1`.
+
+## Tests
+
+- `npm test`: unit tests (phone parsing, Daraja helpers, payment logic against a fake database).
+- `npm run test:e2e`: runs the real `mpesaCallback` function and your `firestore.rules` against the
+  Firebase emulators. It posts the same callbacks Safaricom sends (success, duplicate, wrong amount,
+  cancelled, bad token) and checks what lands in Firestore, then tests the security rules.
+  Needs **JDK 21+** on the path. Uses dummy secrets from `functions/.secret.local` (git-ignored;
+  create it with `MPESA_CONSUMER_KEY`, `MPESA_CONSUMER_SECRET`, `MPESA_PASSKEY` and
+  `MPESA_CALLBACK_TOKEN=local-test-token`).
