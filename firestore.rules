@@ -21,5 +21,10 @@ service cloud.firestore {
         && request.resource.data.trialStartedAt == request.time;
       allow update, delete: if false;
     }
+
+    match /payments/{paymentId} {
+      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
+      allow write: if false;
+    }
   }
 }
