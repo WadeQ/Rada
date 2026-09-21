@@ -138,7 +138,7 @@ fun MpesaStyleCard(
     Box(
         modifier
             .fillMaxWidth()
-            .aspectRatio(1.75f)
+            .aspectRatio(2.2f)
             .alpha(if (selected) 1f else 0.62f)
             .clip(shape)
             .background(Brush.linearGradient(listOf(PayBrand.MpesaGreen, PayBrand.MpesaDeep)))
@@ -146,15 +146,17 @@ fun MpesaStyleCard(
             .clickable(onClick = onClick)
     ) {
         Canvas(Modifier.fillMaxSize()) {
-            drawCircle(Color.White.copy(alpha = 0.08f), radius = size.height * 0.9f, center = Offset(size.width * 1.0f, size.height * 0.95f))
+            drawCircle(Color.White.copy(alpha = 0.08f), radius = size.height * 0.95f, center = Offset(size.width * 1.0f, size.height * 0.95f))
         }
-        Row(Modifier.fillMaxSize().padding(18.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 14.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.SpaceBetween) {
                 MpesaWordmark()
-                Column {
-                    Text("Pay once", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                    Text("$periodLabel of Pro", color = Color.White.copy(alpha = 0.9f), fontSize = 11.5.sp)
-                }
+                Text(
+                    "Pay once · $periodLabel of Pro",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
                 Text(
                     "No auto-renew",
                     color = PayBrand.MpesaDeep,
@@ -163,12 +165,12 @@ fun MpesaStyleCard(
                     modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Color.White).padding(horizontal = 8.dp, vertical = 3.dp)
                 )
             }
-            Spacer(Modifier.width(10.dp))
+            Spacer(Modifier.width(8.dp))
             Box(Modifier.align(Alignment.CenterVertically)) {
                 StkPromptPreview(amountLabel)
             }
         }
-        if (selected) SelectedTick(Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 12.dp), Color.White)
+        if (selected) SelectedTick(Modifier.align(Alignment.TopEnd).padding(top = 10.dp, end = 10.dp), Color.White)
     }
 }
 
@@ -176,19 +178,26 @@ fun MpesaStyleCard(
 private fun MpesaWordmark() {
     Column {
         Text(
+            "LIPA NA",
+            color = Color.White,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 2.sp
+        )
+        Text(
             "M-PESA",
             color = Color.White,
-            fontSize = 22.sp,
+            fontSize = 25.sp,
             fontWeight = FontWeight.Black,
             fontStyle = FontStyle.Italic,
             letterSpacing = 0.5.sp
         )
-        Canvas(Modifier.width(92.dp).height(9.dp)) {
+        Canvas(Modifier.width(96.dp).height(8.dp)) {
             val path = Path().apply {
                 moveTo(0f, size.height * 0.2f)
                 quadraticTo(size.width * 0.5f, size.height * 1.5f, size.width, size.height * 0.1f)
             }
-            drawPath(path, PayBrand.MpesaRed, style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round))
+            drawPath(path, PayBrand.MpesaRed, style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
         }
     }
 }
@@ -197,14 +206,14 @@ private fun MpesaWordmark() {
 private fun StkPromptPreview(amountLabel: String) {
     Column(
         Modifier
-            .width(118.dp)
+            .width(104.dp)
             .rotate(-3f)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.White)
-            .padding(10.dp),
+            .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("M-PESA", color = PayBrand.MpesaGreen, fontSize = 9.sp, fontWeight = FontWeight.Black)
+        Text("Lipa na M-PESA", color = PayBrand.MpesaGreen, fontSize = 9.sp, fontWeight = FontWeight.Black)
         Spacer(Modifier.height(4.dp))
         Text("Pay $amountLabel to Rada?", color = Color(0xFF1E1E1E), fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 12.sp)
         Spacer(Modifier.height(6.dp))

@@ -134,15 +134,15 @@ fun PaywallContentScreen(
             )
             Spacer(Modifier.height(5.dp))
             Text(
-                "Approve a prompt on your phone with your M-Pesa PIN. Pay again only when you choose to.",
+                "Lipa na M-PESA: approve a prompt on your phone with your PIN. Pay again only when you choose to.",
                 color = RadaColors.TextMuted, fontSize = 11.sp, lineHeight = 15.sp
             )
         } else {
             MethodStrip(
                 brand = Brush.linearGradient(listOf(PayBrand.MpesaGreen, PayBrand.MpesaDeep)),
                 mark = "M-PESA",
-                title = "Pay once with M-Pesa",
-                subtitle = "No auto-renew · STK push",
+                title = "Lipa na M-PESA",
+                subtitle = "Pay once · No auto-renew",
                 enabled = true,
                 onClick = { onIntent(PaywallIntent.MethodSelected(PayMethod.MPESA)) }
             )
