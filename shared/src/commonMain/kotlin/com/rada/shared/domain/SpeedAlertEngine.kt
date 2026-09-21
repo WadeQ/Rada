@@ -11,9 +11,7 @@ import kotlin.math.sqrt
 class SpeedAlertEngine(private var gridIndex: CameraGridIndex) {
     companion object {
         private const val EARTH_RADIUS_METERS = 6371000.0
-        private const val REACTION_TIME_SECONDS = 7.0
         private const val MIN_ALERT_DISTANCE_METERS = 60.0
-        private const val MAX_ALERT_DISTANCE_METERS = 350.0
         private const val MIN_SPEED_FOR_BEARING_CHECK_KMH = 8.0
         private const val BEARING_TOLERANCE_DEGREES = 20.0
         private const val RESET_DISTANCE_MULTIPLIER = 2.0
@@ -23,6 +21,9 @@ class SpeedAlertEngine(private var gridIndex: CameraGridIndex) {
     fun interface AlertListener {
         fun onWarning(camera: SpeedCamera, currentSpeed: Double, distanceMeters: Double)
     }
+    @kotlin.concurrent.Volatile
+    var warningLead: WarningLead = WarningLead.STANDARD
+
     private val trackingStates = mutableMapOf<String, CameraTrackingState>()
     fun updateGridIndex(newGridIndex: CameraGridIndex) {
         gridIndex = newGridIndex
@@ -74,8 +75,9 @@ class SpeedAlertEngine(private var gridIndex: CameraGridIndex) {
 
     private fun computeAlertDistance(speedKmh: Double): Double {
         val speedMs = speedKmh / 3.6
-        return (speedMs * REACTION_TIME_SECONDS)
-            .coerceIn(MIN_ALERT_DISTANCE_METERS, MAX_ALERT_DISTANCE_METERS)
+        val lead = warningLead
+        return (speedMs * lead.seconds)
+            .coerceIn(MIN_ALERT_DISTANCE_METERS, lead.maxMeters)
     }
 
     private fun isRelevantApproach(

@@ -41,6 +41,9 @@ class SettingsViewModel(
         viewModelScope.launch {
             alertPreferences.alertsEnabled.collect { on -> setState { copy(alertsEnabled = on) } }
         }
+        viewModelScope.launch {
+            alertPreferences.warningLead.collect { lead -> setState { copy(warningLead = lead) } }
+        }
     }
 
     override fun onIntent(intent: SettingsIntent) {
@@ -60,6 +63,9 @@ class SettingsViewModel(
                 photoStore.delete()
             }
 
+            is SettingsIntent.WarningLeadSelected -> viewModelScope.launch {
+                alertPreferences.setWarningLead(intent.lead)
+            }
             is SettingsIntent.AlertsToggled -> viewModelScope.launch {
                 alertPreferences.setAlertsEnabled(intent.enabled)
             }

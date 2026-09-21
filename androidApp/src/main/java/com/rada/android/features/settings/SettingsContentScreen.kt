@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -25,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.Button
@@ -54,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import com.rada.android.screens.BOTTOM_BAR_CLEARANCE
 import com.rada.android.data.ThemeMode
 import com.rada.android.screens.ProfileAvatar
+import com.rada.shared.domain.WarningLead
 import com.rada.android.theme.RadaColors
 
 @Composable
@@ -102,6 +105,8 @@ fun SettingsContentScreen(
                     checked = state.alertsEnabled,
                     onToggle = { onIntent(SettingsIntent.AlertsToggled(it)) }
                 )
+                RowDivider()
+                LeadRow(state.warningLead) { onIntent(SettingsIntent.WarningLeadSelected(it)) }
                 RowDivider()
                 ActionRow(
                     icon = Icons.AutoMirrored.Outlined.VolumeUp,
@@ -260,6 +265,46 @@ private fun NameGroup(state: SettingsState, onIntent: (SettingsIntent) -> Unit) 
             fontSize = 12.sp,
             modifier = Modifier.padding(start = 8.dp, top = 8.dp)
         )
+    }
+}
+
+@Composable
+private fun LeadRow(selected: WarningLead, onSelect: (WarningLead) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = 10.dp, bottom = 12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.Timer, null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                Text("Warning distance", color = colors.onSurface, fontSize = 15.sp)
+                Text(
+                    "About ${selected.seconds.toInt()} seconds ahead, up to ${selected.maxMeters.toInt()} m",
+                    color = colors.onSurfaceVariant, fontSize = 12.sp
+                )
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Row(Modifier.fillMaxWidth().padding(start = 36.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            WarningLead.entries.forEach { lead ->
+                val on = lead == selected
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .clip(CircleShape)
+                        .background(if (on) RadaColors.Accent else colors.surfaceVariant)
+                        .clickable { onSelect(lead) }
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        lead.name.lowercase().replaceFirstChar { it.uppercase() },
+                        color = if (on) RadaColors.AccentInk else colors.onSurface,
+                        fontSize = 12.5.sp,
+                        fontWeight = if (on) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                }
+            }
+        }
     }
 }
 

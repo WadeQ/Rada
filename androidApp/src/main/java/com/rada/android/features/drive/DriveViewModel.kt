@@ -72,6 +72,10 @@ class DriveViewModel(
         }
 
         viewModelScope.launch {
+            alertPreferences.warningLead.collect { engine.warningLead = it }
+        }
+
+        viewModelScope.launch {
             reportRepository.observeActiveCameraReports(ACTIVE_REPORT_MAX_AGE_MINUTES).collect { reports ->
                 liveReports = reports
                 cameraIndex = CameraGridIndex(MockData.nairobiCameras + MockData.demoAlcoblowReport + liveReports)

@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.rada.shared.domain.WarningLead
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -85,6 +86,16 @@ class AlertPreferences(private val context: Context) {
 
     suspend fun setAlertsEnabled(enabled: Boolean) {
         context.dataStore.edit { prefs -> prefs[key] = enabled }
+    }
+
+    private val leadKey = intPreferencesKey("warning_lead")
+
+    val warningLead: Flow<WarningLead> = context.dataStore.data.map { prefs ->
+        WarningLead.entries.getOrElse(prefs[leadKey] ?: 0) { WarningLead.STANDARD }
+    }
+
+    suspend fun setWarningLead(lead: WarningLead) {
+        context.dataStore.edit { prefs -> prefs[leadKey] = lead.ordinal }
     }
 }
 
