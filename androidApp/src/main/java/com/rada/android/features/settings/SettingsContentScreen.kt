@@ -130,22 +130,18 @@ fun SettingsContentScreen(
                 )
             }
             Spacer(Modifier.height(16.dp))
+            SettingsGroup {
+                ActionRow(
+                    icon = Icons.AutoMirrored.Outlined.Logout,
+                    title = "Log out",
+                    subtitle = state.userName.takeIf { it.isNotBlank() }?.let { "Signed in as $it" } ?: "Sign out of this device",
+                    tint = RadaColors.Accent,
+                    onClick = { onIntent(SettingsIntent.SignOutTapped) }
+                )
+            }
+            Spacer(Modifier.height(16.dp))
         }
 
-        Button(
-            onClick = { onIntent(SettingsIntent.SignOutTapped) },
-            shape = CircleShape,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = RadaColors.Accent,
-                contentColor = RadaColors.AccentInk
-            ),
-            elevation = ButtonDefaults.buttonElevation(0.dp, 0.dp, 0.dp, 0.dp, 0.dp),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(54.dp)
-        ) {
-            Icon(Icons.AutoMirrored.Outlined.Logout, null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(8.dp))
-            Text("Log out", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-        }
         Spacer(Modifier.height(BOTTOM_BAR_CLEARANCE))
 
     }
@@ -309,7 +305,7 @@ private fun LeadRow(selected: WarningLead, onSelect: (WarningLead) -> Unit) {
 }
 
 @Composable
-private fun ActionRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
+private fun ActionRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit, tint: Color? = null) {
     val colors = MaterialTheme.colorScheme
     Row(
         Modifier
@@ -318,10 +314,10 @@ private fun ActionRow(icon: ImageVector, title: String, subtitle: String, onClic
             .padding(start = 16.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(icon, null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        Icon(icon, null, tint = tint ?: colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, color = colors.onSurface, fontSize = 15.sp)
+            Text(title, color = tint ?: colors.onSurface, fontSize = 15.sp, fontWeight = if (tint != null) FontWeight.SemiBold else FontWeight.Normal)
             Text(subtitle, color = colors.onSurfaceVariant, fontSize = 12.sp)
         }
     }
