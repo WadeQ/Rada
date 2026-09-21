@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import com.rada.android.theme.radaFieldColors
@@ -203,17 +204,12 @@ fun PaywallContentScreen(
                 onConfirm = { onIntent(PaywallIntent.PlaySubscribeTapped) }
             )
         }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            "Restore purchase",
-            color = RadaColors.TextSecondary,
-            fontSize = 12.sp,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(10.dp))
-                .clickable { onIntent(PaywallIntent.RestoreTapped) }
-                .padding(vertical = 8.dp)
-        )
+        Spacer(Modifier.height(12.dp))
+        OutlinedButton(
+            onClick = { onIntent(PaywallIntent.RestoreTapped) },
+            modifier = Modifier.fillMaxWidth().height(44.dp)
+        ) {
+            Text("Restore purchase", fontSize = 13.sp)
+        }
     }
 }
