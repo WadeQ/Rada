@@ -26,6 +26,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.automirrored.outlined.VolumeUp
 import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.PhotoCamera
@@ -59,6 +66,7 @@ import com.rada.android.screens.ProfileAvatar
 import com.rada.shared.domain.WarningLead
 import com.rada.android.theme.RadaColors
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsContentScreen(
     state: SettingsState,
@@ -72,6 +80,32 @@ fun SettingsContentScreen(
     modifier: Modifier = Modifier
 ) {
     val colors = MaterialTheme.colorScheme
+    var showAlertSheet by rememberSaveable { mutableStateOf(false) }
+
+    if (showAlertSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showAlertSheet = false },
+            containerColor = colors.surface
+        ) {
+            Column(Modifier.padding(bottom = 24.dp)) {
+                Text(
+                    "Alert settings",
+                    color = colors.onSurface,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp)
+                )
+                LeadRow(state.warningLead) { onIntent(SettingsIntent.WarningLeadSelected(it)) }
+                RowDivider()
+                ActionRow(
+                    icon = Icons.AutoMirrored.Outlined.VolumeUp,
+                    title = "Test alert sound",
+                    subtitle = "Plays the chime and voice warning at your current volume",
+                    onClick = onTestSound
+                )
+            }
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize().background(colors.background)) {
         Text(
@@ -106,13 +140,12 @@ fun SettingsContentScreen(
                     onToggle = { onIntent(SettingsIntent.AlertsToggled(it)) }
                 )
                 RowDivider()
-                LeadRow(state.warningLead) { onIntent(SettingsIntent.WarningLeadSelected(it)) }
-                RowDivider()
                 ActionRow(
-                    icon = Icons.AutoMirrored.Outlined.VolumeUp,
-                    title = "Test alert sound",
-                    subtitle = "Plays the chime and voice warning at your current volume",
-                    onClick = onTestSound
+                    icon = Icons.Outlined.Tune,
+                    title = "Alert settings",
+                    subtitle = "Warns about ${state.warningLead.seconds.toInt()} seconds ahead · test the sound",
+                    showChevron = true,
+                    onClick = { showAlertSheet = true }
                 )
                 RowDivider()
                 val darkOn = when (state.themeMode) {
@@ -305,7 +338,14 @@ private fun LeadRow(selected: WarningLead, onSelect: (WarningLead) -> Unit) {
 }
 
 @Composable
-private fun ActionRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit, tint: Color? = null) {
+private fun ActionRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    tint: Color? = null,
+    showChevron: Boolean = false
+) {
     val colors = MaterialTheme.colorScheme
     Row(
         Modifier
@@ -319,6 +359,9 @@ private fun ActionRow(icon: ImageVector, title: String, subtitle: String, onClic
         Column(Modifier.weight(1f)) {
             Text(title, color = tint ?: colors.onSurface, fontSize = 15.sp, fontWeight = if (tint != null) FontWeight.SemiBold else FontWeight.Normal)
             Text(subtitle, color = colors.onSurfaceVariant, fontSize = 12.sp)
+        }
+        if (showChevron) {
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
         }
     }
 }
