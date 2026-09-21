@@ -33,11 +33,30 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.remember
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.PhotoCamera
@@ -218,11 +237,25 @@ private fun RowDivider(startIndent: Int = 52) {
 @Composable
 private fun PhotoHeader(state: SettingsState, onPick: () -> Unit, onRemove: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val scope = rememberCoroutineScope()
     var menuOpen by remember { mutableStateOf(false) }
+    var menuShown by remember { mutableStateOf(false) }
+    val avatarScale by animateFloatAsState(if (menuShown) 0.94f else 1f, spring(dampingRatio = 0.6f), label = "avatarScale")
+
+    fun closeMenu(after: () -> Unit = {}) {
+        menuShown = false
+        scope.launch {
+            delay(MENU_EXIT_MS)
+            menuOpen = false
+            after()
+        }
+    }
 
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.size(104.dp)) {
-            ProfileAvatar(name = state.userName, photoPath = state.photoPath, size = 104.dp)
+            Box(Modifier.graphicsLayer { scaleX = avatarScale; scaleY = avatarScale }) {
+                ProfileAvatar(name = state.userName, photoPath = state.photoPath, size = 104.dp)
+            }
             Box(
                 Modifier
                     .align(Alignment.BottomEnd)
@@ -230,33 +263,52 @@ private fun PhotoHeader(state: SettingsState, onPick: () -> Unit, onRemove: () -
                     .clip(CircleShape)
                     .background(RadaColors.Accent)
                     .border(3.dp, colors.background, CircleShape)
-                    .clickable { menuOpen = true },
+                    .clickable {
+                        if (menuOpen) closeMenu() else {
+                            menuOpen = true
+                            menuShown = true
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    Icons.Outlined.PhotoCamera,
-                    "Edit profile photo",
-                    tint = RadaColors.AccentInk,
-                    modifier = Modifier.size(17.dp)
-                )
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                    DropdownMenuItem(
-                        text = { Text(if (state.photoPath != null) "Change photo" else "Choose photo") },
-                        leadingIcon = { Icon(Icons.Outlined.Edit, null, modifier = Modifier.size(18.dp)) },
-                        onClick = {
-                            menuOpen = false
-                            onPick()
-                        }
+                Crossfade(targetState = menuShown, animationSpec = tween(180), label = "badgeIcon") { open ->
+                    Icon(
+                        if (open) Icons.Outlined.Close else Icons.Outlined.PhotoCamera,
+                        if (open) "Close" else "Edit profile photo",
+                        tint = RadaColors.AccentInk,
+                        modifier = Modifier.size(17.dp)
                     )
-                    if (state.photoPath != null) {
-                        DropdownMenuItem(
-                            text = { Text("Remove photo") },
-                            leadingIcon = { Icon(Icons.Outlined.Delete, null, modifier = Modifier.size(18.dp)) },
-                            onClick = {
-                                menuOpen = false
-                                onRemove()
+                }
+                if (menuOpen) {
+                    val gap = with(LocalDensity.current) { 12.dp.roundToPx() }
+                    Popup(
+                        alignment = Alignment.TopStart,
+                        offset = IntOffset(with(LocalDensity.current) { 34.dp.roundToPx() } + gap, -with(LocalDensity.current) { 22.dp.roundToPx() }),
+                        onDismissRequest = { closeMenu() },
+                        properties = PopupProperties(focusable = true)
+                    ) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            PhotoAction(
+                                visible = menuShown,
+                                delayMs = 0,
+                                icon = Icons.Outlined.Edit,
+                                label = if (state.photoPath != null) "Change photo" else "Choose photo",
+                                iconTint = RadaColors.AccentInk,
+                                iconBackground = RadaColors.Accent,
+                                onClick = { closeMenu(onPick) }
+                            )
+                            if (state.photoPath != null) {
+                                PhotoAction(
+                                    visible = menuShown,
+                                    delayMs = 70,
+                                    icon = Icons.Outlined.Delete,
+                                    label = "Remove photo",
+                                    iconTint = colors.error,
+                                    iconBackground = colors.error.copy(alpha = 0.16f),
+                                    onClick = { closeMenu(onRemove) }
+                                )
                             }
-                        )
+                        }
                     }
                 }
             }
@@ -272,6 +324,48 @@ private fun PhotoHeader(state: SettingsState, onPick: () -> Unit, onRemove: () -
         }
     }
 }
+
+@Composable
+private fun PhotoAction(
+    visible: Boolean,
+    delayMs: Int,
+    icon: ImageVector,
+    label: String,
+    iconTint: Color,
+    iconBackground: Color,
+    onClick: () -> Unit
+) {
+    val colors = MaterialTheme.colorScheme
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(tween(160, delayMs)) +
+            scaleIn(spring(dampingRatio = 0.55f, stiffness = 380f), initialScale = 0.5f, transformOrigin = TransformOrigin(0f, 0.5f)) +
+            slideInHorizontally(tween(220, delayMs)) { -it / 4 },
+        exit = fadeOut(tween(120)) + scaleOut(tween(140), targetScale = 0.6f, transformOrigin = TransformOrigin(0f, 0.5f))
+    ) {
+        Row(
+            Modifier
+                .shadow(8.dp, CircleShape)
+                .clip(CircleShape)
+                .background(colors.surface)
+                .border(1.dp, colors.onSurface.copy(alpha = 0.08f), CircleShape)
+                .clickable(onClick = onClick)
+                .padding(start = 6.dp, end = 16.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                Modifier.size(32.dp).clip(CircleShape).background(iconBackground),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, null, tint = iconTint, modifier = Modifier.size(17.dp))
+            }
+            Spacer(Modifier.width(10.dp))
+            Text(label, color = colors.onSurface, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        }
+    }
+}
+
+private const val MENU_EXIT_MS = 170L
 
 @Composable
 private fun LeadRow(selected: WarningLead, onSelect: (WarningLead) -> Unit) {
