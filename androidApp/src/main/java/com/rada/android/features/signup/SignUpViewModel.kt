@@ -4,8 +4,10 @@ import android.app.Activity
 import androidx.lifecycle.viewModelScope
 import com.rada.android.data.AuthRepository
 import com.rada.android.data.SignInResult
+import com.rada.android.data.TrialPreferences
 import com.rada.android.data.UserProfilePreferences
 import com.rada.android.data.syncProfileName
+import com.rada.android.data.syncTrial
 import com.rada.android.domain.UsernameValidator
 import com.rada.android.mvi.MviViewModel
 import kotlinx.coroutines.flow.first
@@ -13,7 +15,8 @@ import kotlinx.coroutines.launch
 
 class SignUpViewModel(
     private val authRepository: AuthRepository,
-    private val userProfilePreferences: UserProfilePreferences
+    private val userProfilePreferences: UserProfilePreferences,
+    private val trialPreferences: TrialPreferences
 ) : MviViewModel<SignUpIntent, SignUpState, SignUpEffect>(SignUpState()) {
 
     override fun onIntent(intent: SignUpIntent) {
@@ -46,6 +49,7 @@ class SignUpViewModel(
             when (val result = block()) {
                 is SignInResult.Success -> {
                     syncProfileName(authRepository, userProfilePreferences)
+                    syncTrial(trialPreferences)
                     val name = userProfilePreferences.userName.first()
                     sendEffect(if (name.isNullOrBlank()) SignUpEffect.NavigateToCompleteProfile else SignUpEffect.SignedIn)
                 }

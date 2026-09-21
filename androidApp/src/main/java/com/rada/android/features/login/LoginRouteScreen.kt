@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rada.android.data.FirebaseAuthRepository
+import com.rada.android.data.TrialPreferences
 import com.rada.android.data.UserProfilePreferences
 
 @Composable
@@ -25,7 +26,7 @@ fun LoginRouteScreen(
     val context = LocalContext.current
     val activity = context as? Activity
     val viewModel: LoginViewModel = viewModel {
-        LoginViewModel(FirebaseAuthRepository(), UserProfilePreferences(context))
+        LoginViewModel(FirebaseAuthRepository(), UserProfilePreferences(context), TrialPreferences(context))
     }
     val state by viewModel.state.collectAsState()
 

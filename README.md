@@ -129,8 +129,13 @@ Firebase console notes:
 3. **Apple (optional):** needs an Apple Developer account: create a Services ID and a Sign in
    with Apple key, enter them in Firebase (Sign-in method → Apple), and add Firebase's callback
    URL to the Services ID.
-4. **Firestore rules:** the `reports` collection is currently open. Require
-   `request.auth != null` before you release.
+4. **Firestore rules:** publish [`firestore.rules`](firestore.rules) (Firestore → Rules, or
+   `firebase deploy --only firestore:rules`). Reports need a signed-in user, can only be deleted
+   by their author, and each account has one server-stamped `trialStartedAt` that can't be edited.
+
+**Free trial.** The 7-day Drive trial starts once per account. The start time is written to
+Firestore (`users/{uid}`) with a server timestamp and read back on sign-in, so clearing app data
+or reinstalling does not restart it. A new account still gets a new trial.
 
 ## iOS
 
@@ -151,8 +156,7 @@ Rada is early. What is real and what is not:
   mechanic phone numbers (placeholders).
 - **Not built yet:** hooking `AlertNotifier` into the app (so the “Alert notifications” switch in
   Settings saves a preference that nothing reads yet), the foreground service for background
-  alerts (Play Store policy for navigation apps), a bundled alert sound, and Firestore
-  security rules (the `reports` collection is open while auth is off).
+  alerts (Play Store policy for navigation apps), a bundled alert sound,.
 - **iOS is a prototype:** the screens mirror Android's design, but with mock data and local
   storage. It has no location, map or Firestore layer yet, so Drive and live reports are
   Android-only for now.

@@ -4,15 +4,18 @@ import android.app.Activity
 import androidx.lifecycle.viewModelScope
 import com.rada.android.data.AuthRepository
 import com.rada.android.data.SignInResult
+import com.rada.android.data.TrialPreferences
 import com.rada.android.data.UserProfilePreferences
 import com.rada.android.data.syncProfileName
+import com.rada.android.data.syncTrial
 import com.rada.android.mvi.MviViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val authRepository: AuthRepository,
-    private val userProfilePreferences: UserProfilePreferences
+    private val userProfilePreferences: UserProfilePreferences,
+    private val trialPreferences: TrialPreferences
 ) : MviViewModel<LoginIntent, LoginState, LoginEffect>(LoginState()) {
 
     override fun onIntent(intent: LoginIntent) {
@@ -45,6 +48,7 @@ class LoginViewModel(
             when (val result = block()) {
                 is SignInResult.Success -> {
                     syncProfileName(authRepository, userProfilePreferences)
+                    syncTrial(trialPreferences)
                     val name = userProfilePreferences.userName.first()
                     sendEffect(if (name.isNullOrBlank()) LoginEffect.NavigateToCompleteProfile else LoginEffect.SignedInDirectly)
                 }

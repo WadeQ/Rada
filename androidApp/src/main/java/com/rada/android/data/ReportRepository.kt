@@ -1,5 +1,6 @@
 package com.rada.android.data
 
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -73,6 +74,7 @@ class FirestoreReportRepository(
             "longitude" to longitude,
             "bearing" to bearing,
             "placeName" to placeName,
+            "uid" to FirebaseAuth.getInstance().currentUser?.uid,
             "timestamp" to FieldValue.serverTimestamp()
         )
         return try {

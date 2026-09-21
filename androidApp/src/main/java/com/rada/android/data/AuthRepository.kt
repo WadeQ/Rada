@@ -146,7 +146,10 @@ class FirebaseAuthRepository(
         }
     }
 
-    override fun signOut() = auth.signOut()
+    override fun signOut() {
+        auth.signOut()
+        TrialPreferences.resetSync()
+    }
 
     private fun usernameToEmail(username: String) = "${username.trim().lowercase()}@users.rada.invalid"
 }
