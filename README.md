@@ -24,6 +24,11 @@ eye.
     <td align="center"><img src="docs/screenshots/05-report.png" width="190"><br><sub>One-tap reporting</sub></td>
     <td align="center"><img src="docs/screenshots/06-help.png" width="190"><br><sub>Roadside help</sub></td>
   </tr>
+  <tr>
+    <td align="center"><img src="docs/screenshots/07-sign-in.png" width="190"><br><sub>Sign in</sub></td>
+    <td align="center"><img src="docs/screenshots/08-create-account.png" width="190"><br><sub>Create account</sub></td>
+    <td></td>
+  </tr>
 </table>
 
 <sub>Android, captured on an emulator. The alerts and chart data in these shots are test reports.</sub>
@@ -97,21 +102,6 @@ iosApp/          SwiftUI app (see iosApp/SETUP.md)
 docs/            screenshots and brand assets
 ```
 
-## Getting started (Android)
-
-1. Open the project in a current Android Studio (JDK 17) and let Gradle sync.
-2. Add your two config files. Neither is committed:
-   - `androidApp/google-services.json`, from your Firebase project (see
-     `google-services.json.example` for the shape). Package name `com.rada.android`.
-   - `androidApp/src/main/res/values/secrets.xml`, with your Google Maps key (copy
-     `androidApp/secrets.xml.example`). The key needs **Maps SDK for Android** enabled and should
-     be restricted to `com.rada.android` plus your debug SHA-1.
-3. Run the `androidApp` configuration.
-
-```
-./gradlew :androidApp:assembleDebug
-```
-
 ## Authentication (Firebase)
 
 People **create an account** with a username and password, or with Google or Apple, and
@@ -123,7 +113,7 @@ mail. This makes usernames unique for free. The trade-off is that **there is no 
 recovery**: a forgotten password can't be reset by email. To add recovery later, collect a real
 email address at sign-up and store it on the account.
 
-Setup in the Firebase console:
+Firebase console notes:
 
 1. **Authentication → Sign-in method:** enable **Email/Password**. That is all username and
    password needs: no fingerprint, SMS region or Play Integrity.
@@ -139,10 +129,8 @@ Setup in the Firebase console:
 
 ## iOS
 
-`iosApp/` contains the SwiftUI sources and an asset catalog (app icon, launch image). There is
-no `.xcodeproj` in the repo yet: create an iOS App project and add the sources, then follow
-[`iosApp/SETUP.md`](iosApp/SETUP.md) for the launch screen and icon wiring (iOS 16+). The iOS
-Kotlin/Native framework only builds on macOS; `:shared` builds as Android-only elsewhere.
+`iosApp/` holds the SwiftUI sources and asset catalog (app icon, launch image). There is no
+`.xcodeproj` yet; launch screen and icon wiring notes are in [`iosApp/SETUP.md`](iosApp/SETUP.md).
 
 ## Status
 
