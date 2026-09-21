@@ -79,7 +79,7 @@ eye. 👁️
 | 🆘 | **Roadside help** | Emergency numbers, tow companies and mechanics, one tap to call. |
 | 🎛️ | **Settings** | Profile photo, name, alert switch, warning distance, a **Test alert sound** button, and a dark-mode switch. Everything saves as you change it; there is no Save button. |
 | 🌗 | **Light and dark themes** | A lime-on-ink identity with burgundy accents, and an adaptive launcher icon (with a themed variant on Android 13+). |
-| 👑 | **Rada Pro** | Try Drive **free for 7 days**, then unlock it with M-Pesa. See [Pricing and payments](#-pricing-and-payments). |
+| 👑 | **Rada Pro** | Try Drive **free for 7 days**, then unlock it with a Google Play subscription or a one-time M-Pesa payment. See [Pricing and payments](#-pricing-and-payments). |
 
 ## 🚦 How an alert happens
 
