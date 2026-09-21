@@ -87,12 +87,18 @@ fun DashboardContentScreen(
                     fontWeight = FontWeight.ExtraBold
                 )
             }
-            ProfileAvatar(
-                name = state.userName,
-                photoPath = state.photoPath,
-                size = 36.dp,
-                initialsCount = 2
-            )
+            Box(
+                Modifier
+                    .clip(CircleShape)
+                    .clickable(onClickLabel = "Open settings", onClick = onSettings)
+            ) {
+                ProfileAvatar(
+                    name = state.userName,
+                    photoPath = state.photoPath,
+                    size = 36.dp,
+                    initialsCount = 2
+                )
+            }
         }
 
         Column(
