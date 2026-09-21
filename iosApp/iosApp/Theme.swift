@@ -27,6 +27,7 @@ extension Color {
     static let radaSplashInk = Color(hex: 0x12161B)
 
     static let radaBurgundy = adaptive(light: 0x9A2C50, dark: 0x7A1F3D)
+    static let radaBurgundyText = adaptive(light: 0x9A2C50, dark: 0xC2496E)
 
     init(hex: UInt32) {
         let r = Double((hex >> 16) & 0xFF) / 255

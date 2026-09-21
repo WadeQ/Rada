@@ -2,7 +2,6 @@ package com.rada.android.screens
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -12,162 +11,163 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.unit.dp
-import kotlin.math.sin
 import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Composable
 fun OnboardingCameraAlertIllustration(modifier: Modifier = Modifier) {
-    val carEnterX = remember { Animatable(-190f) }
-    val popupAlpha = remember { Animatable(0f) }
-
-    LaunchedEffect(Unit) {
-        carEnterX.animateTo(8f, tween(800, easing = LinearEasing))
-        carEnterX.animateTo(-4f, tween(150))
-        carEnterX.animateTo(0f, tween(150))
-        popupAlpha.animateTo(1f, tween(500))
-    }
-
-    val infinite = rememberInfiniteTransition(label = "ob-illustration-loop")
-    val bob by infinite.animateFloat(
-        0f, 1f, infiniteRepeatable(tween(1400, easing = LinearEasing), RepeatMode.Reverse), label = "bob"
-    )
-    val wheelAngle by infinite.animateFloat(
-        0f, 360f, infiniteRepeatable(tween(500, easing = LinearEasing)), label = "wheel"
-    )
-    val arcPhase by infinite.animateFloat(
-        0f, 40f, infiniteRepeatable(tween(1600, easing = LinearEasing)), label = "arc"
-    )
-    val lensGlow by infinite.animateFloat(
-        1f, 0.35f, infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Reverse), label = "glow"
-    )
+    val loop = rememberInfiniteTransition(label = "ob-scene")
+    val road by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(700, easing = LinearEasing)), label = "road")
+    val hills by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(14000, easing = LinearEasing)), label = "hills")
+    val wheel by loop.animateFloat(0f, 360f, infiniteRepeatable(tween(420, easing = LinearEasing)), label = "wheel")
+    val bob by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(900, easing = LinearEasing), RepeatMode.Reverse), label = "bob")
+    val pulse by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(1100, easing = LinearEasing)), label = "pulse")
+    val beam by loop.animateFloat(0f, 40f, infiniteRepeatable(tween(900, easing = LinearEasing)), label = "beam")
+    val approach by loop.animateFloat(0f, 1f, infiniteRepeatable(tween(5200, easing = LinearEasing)), label = "approach")
 
     Canvas(
         modifier
             .fillMaxWidth()
             .aspectRatio(380f / 260f)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
     ) {
-        val scale = size.width / 380f
-        fun x(v: Float) = v * scale
-        fun y(v: Float) = v * scale
-
-        drawRect(Color(0xFF151A21), size = androidx.compose.ui.geometry.Size(size.width, y(170f)))
-        listOf(45f to 35f, 90f to 20f, 330f to 30f, 250f to 45f).forEach { (sx, sy) ->
-            drawCircle(Color(0xFF3A4250), radius = 1.6f * scale, center = Offset(x(sx), y(sy)))
-        }
+        val s = size.width / 380f
+        fun x(v: Float) = v * s
+        fun y(v: Float) = v * s
+        val horizon = y(158f)
 
         drawRect(
-            Color(0xFF262B33),
-            topLeft = Offset(0f, y(170f)),
-            size = androidx.compose.ui.geometry.Size(size.width, y(60f))
+            Brush.verticalGradient(
+                0f to Color(0xFF2A0F2E), 0.5f to Color(0xFF7A1F3D), 1f to Color(0xFFF2A93B),
+                startY = 0f, endY = horizon
+            ),
+            size = Size(size.width, horizon)
         )
-        listOf(20f, 70f, 270f, 320f).forEach { lx ->
+        drawCircle(
+            Brush.radialGradient(
+                listOf(Color(0xFFFFE2A0), Color(0x66FFB35C), Color.Transparent),
+                center = Offset(x(250f), horizon), radius = x(120f)
+            ),
+            radius = x(120f), center = Offset(x(250f), horizon)
+        )
+        drawCircle(Color(0xFFFFEBB8), radius = x(26f), center = Offset(x(250f), horizon - y(8f)))
+        listOf(40f to 30f, 95f to 18f, 160f to 42f, 320f to 26f, 350f to 60f).forEach { (sx, sy) ->
+            drawCircle(Color.White.copy(alpha = 0.55f), radius = 1.5f * s, center = Offset(x(sx), y(sy)))
+        }
+
+        fun ridge(color: Color, base: Float, amp: Float, scroll: Float, waves: Float) {
+            val p = Path().apply {
+                moveTo(0f, horizon)
+                var px = 0f
+                while (px <= size.width + 4f) {
+                    val t = px / size.width * waves * 2f * PI.toFloat() + scroll * 2f * PI.toFloat()
+                    lineTo(px, horizon - y(base) - y(amp) * (0.5f + 0.5f * sin(t)))
+                    px += 4f
+                }
+                lineTo(size.width, horizon); close()
+            }
+            drawPath(p, color)
+        }
+        ridge(Color(0xFF4A1A45), 14f, 26f, hills, 1.6f)
+        ridge(Color(0xFF2E0F30), 4f, 16f, hills * 2f, 2.4f)
+
+        drawRect(Color(0xFF1F2128), topLeft = Offset(0f, horizon), size = Size(size.width, size.height - horizon))
+        drawRect(Color(0xFFCCFF00), topLeft = Offset(0f, horizon), size = Size(size.width, y(3f)))
+        val dashW = x(30f); val gap = x(30f)
+        var dx = -(road * (dashW + gap))
+        while (dx < size.width) {
             drawRoundRect(
-                Color(0xFF4B5563),
-                topLeft = Offset(x(lx), y(197f)),
-                size = androidx.compose.ui.geometry.Size(x(26f), y(4f)),
-                cornerRadius = androidx.compose.ui.geometry.CornerRadius(y(2f))
+                Color.White.copy(alpha = 0.85f), topLeft = Offset(dx, y(214f)),
+                size = Size(dashW, y(5f)), cornerRadius = CornerRadius(y(2.5f))
+            )
+            dx += dashW + gap
+        }
+
+        val poleBase = Offset(x(318f), y(196f))
+        drawRoundRect(Color(0xFF9CA3AF), topLeft = Offset(poleBase.x - x(3f), y(112f)), size = Size(x(6f), y(84f)), cornerRadius = CornerRadius(x(2f)))
+        val cone = Path().apply {
+            moveTo(x(300f), y(110f)); lineTo(x(190f), y(150f)); lineTo(x(190f), y(196f)); lineTo(x(300f), y(122f)); close()
+        }
+        drawPath(cone, Brush.horizontalGradient(listOf(Color(0x00E5484D), Color(0x33E5484D)), startX = x(190f), endX = x(300f)))
+        drawRoundRect(Color(0xFFE5E7EB), topLeft = Offset(x(296f), y(94f)), size = Size(x(48f), y(32f)), cornerRadius = CornerRadius(x(7f)))
+        drawRoundRect(Color(0xFF111827), topLeft = Offset(x(302f), y(99f)), size = Size(x(36f), y(22f)), cornerRadius = CornerRadius(x(5f)))
+        drawCircle(Color(0xFFE5484D).copy(alpha = 0.55f * (1f - pulse)), radius = x(8f + 12f * pulse), center = Offset(x(320f), y(110f)), style = Stroke(width = x(2f)))
+        drawCircle(Color(0xFFFF5A5F), radius = x(6f), center = Offset(x(320f), y(110f)))
+
+        val bounce = y(sin(bob * PI.toFloat()) * 1.6f)
+        val carX = x(58f)
+        val carY = y(188f) + bounce
+
+        val headlight = Path().apply {
+            moveTo(carX + x(96f), carY + y(10f)); lineTo(carX + x(190f), carY - y(4f)); lineTo(carX + x(190f), carY + y(26f)); close()
+        }
+        drawPath(headlight, Brush.horizontalGradient(listOf(Color(0x66FFF3C4), Color.Transparent), startX = carX + x(96f), endX = carX + x(190f)))
+
+        listOf(0f, 9f, 18f).forEach { i ->
+            drawLine(
+                Color.White.copy(alpha = 0.35f - i / 90f),
+                Offset(carX - x(8f) - x(i * 1.5f), carY + y(6f + i * 0.8f)),
+                Offset(carX - x(30f) - x(i * 2.5f), carY + y(6f + i * 0.8f)),
+                strokeWidth = x(2f), cap = StrokeCap.Round
             )
         }
 
-        drawRect(Color(0xFF4B5563), topLeft = Offset(x(298f), y(108f)), size = androidx.compose.ui.geometry.Size(x(6f), y(60f)))
-        drawRoundRect(
-            Color(0xFF333B46), topLeft = Offset(x(280f), y(92f)),
-            size = androidx.compose.ui.geometry.Size(x(44f), y(30f)), cornerRadius = androidx.compose.ui.geometry.CornerRadius(x(6f))
-        )
-        drawCircle(
-            Color(0xFFE5484D), radius = x(8f), center = Offset(x(302f), y(107f)),
-            style = Stroke(width = x(2f)), alpha = lensGlow
-        )
-        drawCircle(Color(0xFFE5484D), radius = x(3f), center = Offset(x(302f), y(107f)))
+        drawRoundRect(Color(0xFFCCFF00), topLeft = Offset(carX, carY), size = Size(x(98f), y(28f)), cornerRadius = CornerRadius(x(11f)))
+        drawRoundRect(Color(0xFFCCFF00), topLeft = Offset(carX + x(24f), carY - y(19f)), size = Size(x(50f), y(26f)), cornerRadius = CornerRadius(x(10f)))
+        drawRoundRect(Color(0xFF1A0A10), topLeft = Offset(carX + x(30f), carY - y(14f)), size = Size(x(38f), y(15f)), cornerRadius = CornerRadius(x(4f)))
+        drawRect(Color(0xFF7A1F3D), topLeft = Offset(carX + x(4f), carY + y(13f)), size = Size(x(90f), y(4f)))
+        drawCircle(Color(0xFFFFF3C4), radius = x(4.5f), center = Offset(carX + x(95f), carY + y(9f)))
+        drawCircle(Color(0xFFE5484D), radius = x(3f), center = Offset(carX + x(2f), carY + y(8f)))
 
-        val dash = PathEffect.dashPathEffect(floatArrayOf(x(5f), x(5f)), phase = x(arcPhase))
-        listOf(0.9f to 0f, 0.5f to 0.5f).forEachIndexed { i, (baseAlpha, _) ->
-            val path = androidx.compose.ui.graphics.Path().apply {
-                if (i == 0) {
-                    moveTo(x(158f), y(168f))
-                    quadraticBezierTo(x(220f), y(150f), x(278f), y(118f))
-                } else {
-                    moveTo(x(158f), y(178f))
-                    quadraticBezierTo(x(215f), y(168f), x(272f), y(132f))
-                }
+        listOf(22f, 76f).forEach { wx ->
+            val c = Offset(carX + x(wx), carY + y(29f))
+            drawCircle(Color(0xFF0B0C10), radius = x(12f), center = c)
+            drawCircle(Color(0xFFD1D5DB), radius = x(6.5f), center = c)
+            val rad = Math.toRadians(wheel.toDouble())
+            for (k in 0..2) {
+                val a = rad + k * 2.0 * PI / 3.0
+                drawLine(Color(0xFF6B7280), c, Offset(c.x + x(6f) * cos(a).toFloat(), c.y + x(6f) * sin(a).toFloat()), strokeWidth = x(2f))
             }
-            drawPath(path, Color(0xFF6FA1F0), style = Stroke(width = x(2f), cap = StrokeCap.Round, pathEffect = dash), alpha = baseAlpha)
         }
 
-        val carX = x(carEnterX.value)
-        val carY = y((sin(bob * PI.toFloat()) * 2f))
-        val carOffset = Offset(carX, carY)
-
-        drawRoundRect(
-            Color(0xFFF2A93B), topLeft = Offset(x(60f), y(188f)) + carOffset,
-            size = androidx.compose.ui.geometry.Size(x(92f), y(26f)), cornerRadius = androidx.compose.ui.geometry.CornerRadius(x(10f))
-        )
-        drawRoundRect(
-            Color(0xFFF2A93B), topLeft = Offset(x(86f), y(170f)) + carOffset,
-            size = androidx.compose.ui.geometry.Size(x(44f), y(22f)), cornerRadius = androidx.compose.ui.geometry.CornerRadius(x(8f))
-        )
-        drawRoundRect(
-            Color(0xFF151A21).copy(alpha = 0.35f), topLeft = Offset(x(90f), y(176f)) + carOffset,
-            size = androidx.compose.ui.geometry.Size(x(34f), y(12f)), cornerRadius = androidx.compose.ui.geometry.CornerRadius(x(3f))
-        )
-        listOf(80f, 135f).forEach { wx ->
-            val center = Offset(x(wx), y(220f)) + carOffset
-            drawCircle(Color(0xFF151A21), radius = x(10f), center = center)
-            val rad = Math.toRadians(wheelAngle.toDouble())
-            val spokeEnd = Offset(
-                center.x + (x(8f) * kotlin.math.cos(rad)).toFloat(),
-                center.y + (x(8f) * kotlin.math.sin(rad)).toFloat()
-            )
-            drawLine(Color(0xFF4B5563), start = center, end = spokeEnd, strokeWidth = x(2f))
-        }
-        drawCircle(Color(0xFFFFE9C2), radius = x(4f), center = Offset(x(151f), y(199f)) + carOffset)
-
-        val popupPath = androidx.compose.ui.graphics.Path().apply {
-            moveTo(x(98f), y(142f)); lineTo(x(110f), y(142f)); lineTo(x(100f), y(154f)); close()
-        }
-        drawPath(popupPath, Color(0xFFF3F1EC), alpha = popupAlpha.value)
-        drawRoundRect(
-            Color(0xFFF3F1EC), topLeft = Offset(x(52f), y(88f)),
-            size = androidx.compose.ui.geometry.Size(x(150f), y(56f)), cornerRadius = androidx.compose.ui.geometry.CornerRadius(x(12f)),
-            alpha = popupAlpha.value
-        )
-        drawRoundRect(
-            Color.Transparent, topLeft = Offset(x(66f), y(104f)),
-            size = androidx.compose.ui.geometry.Size(x(20f), y(16f)), cornerRadius = androidx.compose.ui.geometry.CornerRadius(x(3f)),
-            style = Stroke(width = x(2f)), alpha = popupAlpha.value
-        )
-        drawCircle(
-            Color(0xFFE5484D), radius = x(4f), center = Offset(x(76f), y(112f)),
-            style = Stroke(width = x(2f)), alpha = popupAlpha.value
+        val dash = PathEffect.dashPathEffect(floatArrayOf(x(6f), x(6f)), phase = x(beam))
+        drawPath(
+            Path().apply { moveTo(carX + x(60f), carY - y(20f)); quadraticBezierTo(x(210f), y(70f), x(296f), y(104f)) },
+            Color(0xFFCCFF00), style = Stroke(width = x(2.4f), cap = StrokeCap.Round, pathEffect = dash), alpha = 0.9f
         )
 
-        if (popupAlpha.value > 0.05f) {
-            drawIntoCanvas { canvas ->
-                val paint = android.graphics.Paint().apply {
-                    isAntiAlias = true
-                    textSize = 13f * scale
-                    color = android.graphics.Color.parseColor("#12161B")
-                    alpha = (popupAlpha.value * 255).toInt()
-                }
-                canvas.nativeCanvas.drawText("Camera ahead", x(96f), y(110f), paint)
-                paint.textSize = 11f * scale
-                paint.color = android.graphics.Color.parseColor("#6E7684")
-                canvas.nativeCanvas.drawText("180 m · limit 50 km/h", x(96f), y(127f), paint)
-            }
+        val meters = (180f - approach * 130f).toInt().coerceAtLeast(40)
+        val scalePop = 1f + 0.03f * sin(pulse * 2f * PI.toFloat())
+        val bx = x(24f); val by = y(24f); val bw = x(172f); val bh = y(58f)
+        drawRoundRect(Color(0x33000000), topLeft = Offset(bx + x(2f), by + y(4f)), size = Size(bw * scalePop, bh * scalePop), cornerRadius = CornerRadius(x(14f)))
+        drawRoundRect(Color(0xFFF7F4EE), topLeft = Offset(bx, by), size = Size(bw * scalePop, bh * scalePop), cornerRadius = CornerRadius(x(14f)))
+        drawPath(Path().apply { moveTo(x(104f), y(82f)); lineTo(x(118f), y(82f)); lineTo(x(112f), y(94f)); close() }, Color(0xFFF7F4EE))
+        drawRoundRect(Color(0xFFE5484D), topLeft = Offset(x(38f), y(42f)), size = Size(x(24f), y(18f)), cornerRadius = CornerRadius(x(4f)))
+        drawCircle(Color.White, radius = x(5f), center = Offset(x(50f), y(51f)))
+        drawCircle(Color(0xFF1F2128), radius = x(2.4f), center = Offset(x(50f), y(51f)))
+
+        drawIntoCanvas { canvas ->
+            val paint = android.graphics.Paint().apply { isAntiAlias = true; isFakeBoldText = true }
+            paint.textSize = 14f * s; paint.color = android.graphics.Color.parseColor("#1F1216")
+            canvas.nativeCanvas.drawText("Camera ahead", x(72f), y(48f), paint)
+            paint.isFakeBoldText = false; paint.textSize = 11.5f * s; paint.color = android.graphics.Color.parseColor("#7A1F3D")
+            canvas.nativeCanvas.drawText("$meters m · limit 50 km/h", x(72f), y(67f), paint)
         }
     }
 }

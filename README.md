@@ -112,6 +112,31 @@ docs/            screenshots and brand assets
 ./gradlew :androidApp:assembleDebug
 ```
 
+## Authentication (Firebase)
+
+People **create an account** with a username and password, or with Google or Apple, and
+**sign in** the same way. The session persists, so they sign in once and stay signed in.
+
+**How usernames work.** Firebase signs people in with an email address, so a username such as
+`wanjiru` is turned into an internal address, `wanjiru@users.rada.invalid`, which never receives
+mail. This makes usernames unique for free. The trade-off is that **there is no password
+recovery**: a forgotten password can't be reset by email. To add recovery later, collect a real
+email address at sign-up and store it on the account.
+
+Setup in the Firebase console:
+
+1. **Authentication → Sign-in method:** enable **Email/Password**. That is all username and
+   password needs: no fingerprint, SMS region or Play Integrity.
+2. **Google (optional):** enable the Google provider, add your SHA-1 and SHA-256
+   (`./gradlew :androidApp:signingReport`) under Project settings → your Android app, then
+   download `google-services.json` again. The web client ID is picked up from that file, or set
+   `google_web_client_id` in `secrets.xml`.
+3. **Apple (optional):** needs an Apple Developer account: create a Services ID and a Sign in
+   with Apple key, enter them in Firebase (Sign-in method → Apple), and add Firebase's callback
+   URL to the Services ID.
+4. **Firestore rules:** the `reports` collection is currently open. Require
+   `request.auth != null` before you release.
+
 ## iOS
 
 `iosApp/` contains the SwiftUI sources and an asset catalog (app icon, launch image). There is
@@ -126,8 +151,9 @@ Rada is early. What is real and what is not:
 - **Real:** the alert engine and grid index, location tracking and the live map, Firestore
   crowd reports (submit, undo, live alerts and the weekly chart), local settings, theming,
   the UI on Android.
-- **Stubbed:** phone sign-in (`AuthConfig.FIREBASE_ENABLED = false`, so OTP is bypassed),
-  payments (Pro is an in-memory flag and only the alcohol-check teaser is gated; M-Pesa / Play
+- **Sign-in:** username and password work end to end. Google and Apple are implemented but need
+  the console setup above. There is no password recovery yet, and iOS has no sign-in.
+- **Stubbed:** payments (Pro is an in-memory flag and only the alcohol-check teaser is gated; M-Pesa / Play
   Billing is not wired), Home's “estimated fines avoided” figure (mock), and the tow and
   mechanic phone numbers (placeholders).
 - **Not built yet:** hooking `AlertNotifier` into the app (so the “Alert notifications” switch in

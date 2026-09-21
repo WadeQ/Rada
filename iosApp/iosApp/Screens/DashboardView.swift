@@ -53,9 +53,7 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(greeting).font(.system(size: 12)).foregroundColor(.radaTextSecondary)
                 Text(profile.displayName)
-                    .font(.system(size: 16, weight: .medium)).foregroundColor(.white)
-                    .padding(.horizontal, 12).padding(.vertical, 4)
-                    .background(Capsule().fill(Color.radaBurgundy))
+                    .font(.system(size: 22, weight: .heavy)).foregroundColor(.radaBurgundyText)
             }
             Spacer()
             ProfileAvatar(name: profile.displayName, photo: profile.photo, size: 36, initialsCount: 2)

@@ -140,7 +140,8 @@ class DriveViewModel(
                                 type = camera.type,
                                 distanceMeters = distanceMeters.toInt(),
                                 speedLimitKmh = camera.speedLimit.takeIf { it > 0 }?.toInt(),
-                                placeName = camera.placeName
+                                placeName = camera.placeName,
+                                approximate = camera.approximate
                             )
                         )
                     }

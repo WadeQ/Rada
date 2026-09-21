@@ -19,7 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import com.rada.android.theme.radaFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -136,11 +136,8 @@ fun PaywallContentScreen(
                 placeholder = { Text("Enter M-Pesa number") },
                 singleLine = true,
                 isError = state.errorMessage != null,
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = RadaColors.Blue,
-                    unfocusedContainerColor = RadaColors.Ink2,
-                    focusedContainerColor = RadaColors.Ink2
-                ),
+                colors = radaFieldColors(),
+                shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.fillMaxWidth()
             )
         }

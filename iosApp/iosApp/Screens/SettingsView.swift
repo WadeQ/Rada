@@ -89,8 +89,8 @@ struct SettingsBody: View {
     private var nameGroup: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Full name").font(.system(size: 14)).foregroundColor(.radaTextSecondary)
-                TextField("Your name", text: $nameInput)
+                Text("Display name").font(.system(size: 14)).foregroundColor(.radaTextSecondary)
+                TextField("Display name", text: $nameInput)
                     .multilineTextAlignment(.trailing)
                     .font(.system(size: 15))
                     .foregroundColor(.radaTextPrimary)
@@ -108,7 +108,8 @@ struct SettingsBody: View {
     private func scheduleSave(_ value: String) {
         saveTask?.cancel()
         let trimmed = value.trimmingCharacters(in: .whitespaces)
-        if trimmed.isEmpty { nameError = "Enter a name"; return }
+        if trimmed.count < 3 { nameError = trimmed.isEmpty ? "Choose a username" : "Username must be at least 3 characters"; return }
+        if trimmed.count > 24 { nameError = "Username can be at most 24 characters"; return }
         nameError = nil
         saveTask = Task { @MainActor in
             try? await Task.sleep(nanoseconds: 600_000_000)

@@ -12,7 +12,7 @@ class PaywallViewModel(
     private val authRepository: AuthRepository,
     private val paymentRepository: PaymentRepository
 ) : MviViewModel<PaywallIntent, PaywallState, PaywallEffect>(
-    PaywallState(phoneInput = authRepository.currentUserPhone().orEmpty())
+    PaywallState()
 ) {
 
     override fun onIntent(intent: PaywallIntent) {
@@ -20,7 +20,7 @@ class PaywallViewModel(
             is PaywallIntent.PlanSelected -> setState { copy(selectedPlanIndex = intent.index) }
             is PaywallIntent.PhoneChanged -> setState {
                 copy(
-                    phoneInput = intent.value,
+                    phoneInput = KenyanPhoneValidator.localDigits(intent.value),
                     errorMessage = null
                 )
             }

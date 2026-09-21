@@ -218,13 +218,13 @@ private fun NameGroup(state: SettingsState, onIntent: (SettingsIntent) -> Unit) 
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Full name", color = colors.onSurfaceVariant, fontSize = 14.sp)
+            Text("Display name", color = colors.onSurfaceVariant, fontSize = 14.sp)
             TextField(
                 value = state.nameInput,
                 onValueChange = { onIntent(SettingsIntent.NameInputChanged(it)) },
                 singleLine = true,
                 isError = state.nameError != null,
-                placeholder = { Text("Your name", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.End) },
+                placeholder = { Text("Display name", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.End) },
                 textStyle = TextStyle(textAlign = TextAlign.End, fontSize = 15.sp),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Words,

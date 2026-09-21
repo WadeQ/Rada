@@ -24,6 +24,13 @@ struct LoginView: View {
                     Text("+254").foregroundColor(.radaTextSecondary)
                     TextField("712 345 678", text: $phone)
                         .phoneKeyboard()
+                        .onChange(of: phone) { value in
+                            var digits = value.filter(\.isNumber)
+                            if digits.hasPrefix("254") { digits.removeFirst(3) }
+                            if digits.hasPrefix("0") { digits.removeFirst() }
+                            let trimmed = String(digits.prefix(9))
+                            if trimmed != value { phone = trimmed }
+                        }
                         .foregroundColor(.radaTextPrimary)
                         .padding(.horizontal, 12)
                         .frame(height: 46)

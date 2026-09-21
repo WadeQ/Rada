@@ -7,6 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -15,28 +18,30 @@ import com.rada.android.data.UserProfilePreferences
 
 @Composable
 fun LoginRouteScreen(
-    onNavigateToOtp: (verificationId: String, e164Phone: String) -> Unit,
     onSignedInDirectly: () -> Unit,
-    onNavigateToCompleteProfile: () -> Unit
+    onNavigateToCompleteProfile: () -> Unit,
+    onCreateAccount: () -> Unit
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
     val viewModel: LoginViewModel = viewModel {
         LoginViewModel(FirebaseAuthRepository(), UserProfilePreferences(context))
     }
     val state by viewModel.state.collectAsState()
-    val activity = LocalContext.current as? Activity
+
+    var oneTapShown by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!oneTapShown && activity != null) {
+            oneTapShown = true
+            viewModel.tryOneTap(activity)
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                is LoginEffect.NavigateToOtp -> onNavigateToOtp(
-                    effect.verificationId,
-                    effect.e164Phone
-                )
-
                 is LoginEffect.SignedInDirectly -> onSignedInDirectly()
                 is LoginEffect.NavigateToCompleteProfile -> onNavigateToCompleteProfile()
-                is LoginEffect.ShowError -> Unit
             }
         }
     }
@@ -45,7 +50,10 @@ fun LoginRouteScreen(
         LoginContentScreen(
             state = state,
             onIntent = viewModel::onIntent,
-            onSubmitTapped = { activity?.let { viewModel.submit(it) } },
+            onSignIn = viewModel::signIn,
+            onGoogle = { activity?.let { viewModel.signInWithGoogle(it) } },
+            onApple = { activity?.let { viewModel.signInWithApple(it) } },
+            onCreateAccount = onCreateAccount,
             modifier = Modifier.padding(padding)
         )
     }

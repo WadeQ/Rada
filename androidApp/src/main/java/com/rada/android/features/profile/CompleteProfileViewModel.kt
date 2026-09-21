@@ -1,6 +1,7 @@
 package com.rada.android.features.profile
 
 import androidx.lifecycle.viewModelScope
+import com.rada.android.domain.UsernameValidator
 import com.rada.android.data.UserProfilePreferences
 import com.rada.android.mvi.MviViewModel
 import kotlinx.coroutines.launch
@@ -26,8 +27,8 @@ class CompleteProfileViewModel(
 
     private fun save() {
         val trimmed = currentState.nameInput.trim()
-        if (trimmed.isBlank()) {
-            setState { copy(errorMessage = "Enter a name to continue") }
+        UsernameValidator.error(trimmed)?.let { message ->
+            setState { copy(errorMessage = message) }
             return
         }
         viewModelScope.launch {

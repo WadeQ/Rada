@@ -2,13 +2,11 @@ package com.rada.android.features.login
 
 import android.app.Activity
 import androidx.lifecycle.viewModelScope
-import com.rada.android.data.AuthConfig
 import com.rada.android.data.AuthRepository
-import com.rada.android.data.OtpEvent
+import com.rada.android.data.SignInResult
 import com.rada.android.data.UserProfilePreferences
-import com.rada.android.domain.KenyanPhoneValidator
+import com.rada.android.data.syncProfileName
 import com.rada.android.mvi.MviViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -19,54 +17,41 @@ class LoginViewModel(
 
     override fun onIntent(intent: LoginIntent) {
         when (intent) {
-            is LoginIntent.PhoneChanged -> setState { copy(phoneInput = intent.value, errorMessage = null) }
-            is LoginIntent.SubmitTapped -> Unit
+            is LoginIntent.UsernameChanged -> setState { copy(username = intent.value.filter { !it.isWhitespace() }, errorMessage = null) }
+            is LoginIntent.PasswordChanged -> setState { copy(password = intent.value, errorMessage = null) }
         }
     }
 
-    fun submit(activity: Activity) {
-        val result = KenyanPhoneValidator.validate(currentState.phoneInput)
-        if (!result.isValid) {
-            setState { copy(errorMessage = result.errorMessage) }
+    fun signIn() {
+        if (currentState.isBusy) return
+        val username = currentState.username.trim()
+        if (username.isEmpty() || currentState.password.isEmpty()) {
+            setState { copy(errorMessage = "Enter your username and password") }
             return
         }
-        setState { copy(isValidating = true, errorMessage = null) }
+        run { authRepository.signInWithUsername(username, currentState.password) }
+    }
 
-        if (!AuthConfig.FIREBASE_ENABLED) {
-            viewModelScope.launch {
-                delay(400)
-                setState { copy(isValidating = false) }
-                sendEffect(nextEffectAfterSignIn())
-            }
-            return
-        }
+    fun signInWithGoogle(activity: Activity) = run { authRepository.signInWithGoogle(activity) }
 
+    fun signInWithApple(activity: Activity) = run { authRepository.signInWithApple(activity) }
+
+    fun tryOneTap(activity: Activity) = run { authRepository.signInWithGoogleOneTap(activity, authorizedOnly = true) }
+
+    private fun run(block: suspend () -> SignInResult) {
+        if (currentState.isBusy) return
+        setState { copy(isBusy = true, errorMessage = null) }
         viewModelScope.launch {
-            authRepository.requestOtp(result.e164!!, activity).collect { event ->
-                when (event) {
-                    is OtpEvent.CodeSent -> {
-                        setState { copy(isValidating = false) }
-                        sendEffect(LoginEffect.NavigateToOtp(event.verificationId, result.e164))
-                    }
-                    is OtpEvent.AutoVerified -> {
-                        val signInResult = authRepository.signInWithCredential(event.credential)
-                        setState { copy(isValidating = false) }
-                        when (signInResult) {
-                            is com.rada.android.data.SignInResult.Success -> sendEffect(nextEffectAfterSignIn())
-                            is com.rada.android.data.SignInResult.Failed -> sendEffect(LoginEffect.ShowError(signInResult.message))
-                        }
-                    }
-                    is OtpEvent.Failed -> {
-                        setState { copy(isValidating = false, errorMessage = event.message) }
-                        sendEffect(LoginEffect.ShowError(event.message))
-                    }
+            when (val result = block()) {
+                is SignInResult.Success -> {
+                    syncProfileName(authRepository, userProfilePreferences)
+                    val name = userProfilePreferences.userName.first()
+                    sendEffect(if (name.isNullOrBlank()) LoginEffect.NavigateToCompleteProfile else LoginEffect.SignedInDirectly)
                 }
+                is SignInResult.Failed -> setState { copy(errorMessage = result.message) }
+                is SignInResult.Cancelled -> Unit
             }
+            setState { copy(isBusy = false) }
         }
-    }
-
-    private suspend fun nextEffectAfterSignIn(): LoginEffect {
-        val name = userProfilePreferences.userName.first()
-        return if (name.isNullOrBlank()) LoginEffect.NavigateToCompleteProfile else LoginEffect.SignedInDirectly
     }
 }

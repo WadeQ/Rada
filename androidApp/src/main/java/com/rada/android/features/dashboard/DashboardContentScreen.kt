@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.rada.android.screens.ProfileAvatar
 import com.rada.android.screens.BOTTOM_BAR_CLEARANCE
 import com.rada.android.theme.RadaColors
+import com.rada.android.theme.radaFieldBorder
 import com.rada.shared.data.MockData
 import com.rada.shared.domain.ReportType
 
@@ -77,13 +78,9 @@ fun DashboardContentScreen(
                 Text(state.greeting, color = RadaColors.TextSecondary, fontSize = 12.sp)
                 Text(
                     state.userName,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .background(RadaColors.Burgundy)
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                    color = radaFieldBorder(),
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold
                 )
             }
             ProfileAvatar(

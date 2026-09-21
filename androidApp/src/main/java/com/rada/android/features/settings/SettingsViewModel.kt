@@ -1,6 +1,7 @@
 package com.rada.android.features.settings
 
 import androidx.lifecycle.viewModelScope
+import com.rada.android.domain.UsernameValidator
 import com.rada.android.data.AlertPreferences
 import com.rada.android.data.AuthRepository
 import com.rada.android.data.ProfilePhotoStore
@@ -70,14 +71,17 @@ class SettingsViewModel(
     private fun onNameChanged(value: String) {
         nameSaveJob?.cancel()
         val trimmed = value.trim()
-        if (trimmed.isEmpty()) {
-            setState { copy(nameInput = value, nameError = "Enter a name") }
+        UsernameValidator.error(trimmed)?.let { message ->
+            setState { copy(nameInput = value, nameError = message) }
             return
         }
         setState { copy(nameInput = value, nameError = null) }
         nameSaveJob = viewModelScope.launch {
             delay(NAME_SAVE_DEBOUNCE_MS)
-            if (trimmed != currentState.userName) userProfilePreferences.setUserName(trimmed)
+            if (trimmed != currentState.userName) {
+                userProfilePreferences.setUserName(trimmed)
+                authRepository.updateDisplayName(trimmed)
+            }
         }
     }
 

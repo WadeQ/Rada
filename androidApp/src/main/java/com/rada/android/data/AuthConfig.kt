@@ -1,5 +1,5 @@
 package com.rada.android.data
 
 object AuthConfig {
-    const val FIREBASE_ENABLED = false
+    const val FIREBASE_ENABLED = true
 }

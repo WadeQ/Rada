@@ -2,6 +2,13 @@ package com.rada.android.domain
 
 object KenyanPhoneValidator {
 
+    fun localDigits(raw: String): String {
+        var digits = raw.filter { it.isDigit() }
+        if (digits.startsWith("254")) digits = digits.drop(3)
+        if (digits.startsWith("0")) digits = digits.drop(1)
+        return digits.take(9)
+    }
+
     data class Result(val isValid: Boolean, val e164: String?, val errorMessage: String?)
 
     fun validate(rawInput: String): Result {

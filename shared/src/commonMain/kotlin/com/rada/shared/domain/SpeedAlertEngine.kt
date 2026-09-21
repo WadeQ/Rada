@@ -17,6 +17,7 @@ class SpeedAlertEngine(private var gridIndex: CameraGridIndex) {
         private const val MIN_SPEED_FOR_BEARING_CHECK_KMH = 8.0
         private const val BEARING_TOLERANCE_DEGREES = 20.0
         private const val RESET_DISTANCE_MULTIPLIER = 2.0
+        private const val MIN_CLOSING_METERS = 1.0
     }
 
     fun interface AlertListener {
@@ -36,11 +37,12 @@ class SpeedAlertEngine(private var gridIndex: CameraGridIndex) {
                 camera.latitude, camera.longitude
             )
             val state = trackingStates.getOrPut(camera.id) { CameraTrackingState() }
+            val previousDistance = state.lastDistanceMeters
             state.lastDistanceMeters = distance
 
             when (state.status) {
                 CameraAlertStatus.NOT_ALERTED -> {
-                    if (distance <= alertDistance && isRelevantApproach(driver, camera)) {
+                    if (distance <= alertDistance && isRelevantApproach(driver, camera, previousDistance, distance)) {
                         val shouldFire = when (camera.type) {
                             ReportType.CAMERA -> driver.speedCurrent > camera.speedLimit
                             ReportType.CHECKPOINT, ReportType.ALCOBLOW -> true
@@ -76,7 +78,15 @@ class SpeedAlertEngine(private var gridIndex: CameraGridIndex) {
             .coerceIn(MIN_ALERT_DISTANCE_METERS, MAX_ALERT_DISTANCE_METERS)
     }
 
-    private fun isRelevantApproach(driver: DriverState, camera: SpeedCamera): Boolean {
+    private fun isRelevantApproach(
+        driver: DriverState,
+        camera: SpeedCamera,
+        previousDistance: Double,
+        distance: Double
+    ): Boolean {
+        if (camera.bearing == SpeedCamera.ANY_DIRECTION) {
+            return previousDistance != Double.MAX_VALUE && distance < previousDistance - MIN_CLOSING_METERS
+        }
         if (driver.speedCurrent < MIN_SPEED_FOR_BEARING_CHECK_KMH) return true
         return isHeadingTowardCamera(driver.bearingCurrent, camera.bearing)
     }

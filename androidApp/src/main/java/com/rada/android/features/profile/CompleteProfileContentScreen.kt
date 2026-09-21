@@ -9,7 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.rada.android.theme.radaFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,14 +33,14 @@ fun CompleteProfileContentScreen(
     ) {
         Spacer(Modifier.height(56.dp))
         Text(
-            "What should we call you?",
+            "Choose a username",
             color = MaterialTheme.colorScheme.onBackground,
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium
         )
         Spacer(Modifier.height(6.dp))
         Text(
-            "Just your name — this is the last thing we'll ask before you're in.",
+            "This is how Rada greets you. It's the last thing we'll ask.",
             color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp
         )
         Spacer(Modifier.height(24.dp))
@@ -47,14 +48,11 @@ fun CompleteProfileContentScreen(
         OutlinedTextField(
             value = state.nameInput,
             onValueChange = { onIntent(CompleteProfileIntent.NameChanged(it)) },
-            placeholder = { Text("Enter your name") },
+            placeholder = { Text("Username") },
             singleLine = true,
             isError = state.errorMessage != null,
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                focusedContainerColor = MaterialTheme.colorScheme.surface
-            ),
+            colors = radaFieldColors(),
+            shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth()
         )
         if (state.errorMessage != null) {

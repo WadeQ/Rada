@@ -5,7 +5,7 @@ import com.rada.shared.domain.SpeedCamera
 
 object MockData {
 
-    val nairobiCameras = listOf(
+    private val seedCameras = listOf(
         SpeedCamera(
             id = "thika-rd-allsops", latitude = -1.2236554, longitude = 36.8874307,
             speedLimit = 80.0, bearing = 30f, type = ReportType.CAMERA,
@@ -27,6 +27,8 @@ object MockData {
             placeName = "Waiyaki Way, Kangemi–Uthiru"
         )
     )
+
+    val nairobiCameras: List<SpeedCamera> = seedCameras + FixedCameras.approximate
 
     val demoAlcoblowReport = SpeedCamera(
         id = "checkpoint-1", latitude = -1.2550, longitude = 36.8680,

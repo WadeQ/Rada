@@ -14,8 +14,13 @@ data class SpeedCamera(
     val bearing: Float,
     val type: ReportType = ReportType.CAMERA,
     val isMobile: Boolean = false,
-    val placeName: String? = null
-)
+    val placeName: String? = null,
+    val approximate: Boolean = false
+) {
+    companion object {
+        const val ANY_DIRECTION = -1f
+    }
+}
 
 data class DriverState(
     val latitude: Double,

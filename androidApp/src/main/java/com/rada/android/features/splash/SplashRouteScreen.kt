@@ -8,6 +8,7 @@ import com.rada.android.data.AuthConfig
 import com.rada.android.data.FirebaseAuthRepository
 import com.rada.android.data.OnboardingPreferences
 import com.rada.android.data.UserProfilePreferences
+import com.rada.android.data.syncProfileName
 import com.rada.android.screens.SplashScreen
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -33,6 +34,9 @@ fun SplashRouteScreen(
                 return@launch
             }
 
+            if (AuthConfig.FIREBASE_ENABLED && authRepository.isSignedIn()) {
+                syncProfileName(authRepository, userProfilePrefs)
+            }
             val name = userProfilePrefs.userName.first()
             val isReturningUser = if (AuthConfig.FIREBASE_ENABLED) {
                 authRepository.isSignedIn()

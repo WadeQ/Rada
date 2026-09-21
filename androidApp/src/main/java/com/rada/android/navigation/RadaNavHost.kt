@@ -36,11 +36,11 @@ import com.rada.android.features.drive.DriveRouteScreen
 import com.rada.android.features.help.HelpRouteScreen
 import com.rada.android.features.login.LoginRouteScreen
 import com.rada.android.features.onboarding.OnboardingRouteScreen
-import com.rada.android.features.otp.OtpRouteScreen
 import com.rada.android.features.paywall.PaywallRouteScreen
 import com.rada.android.features.profile.CompleteProfileRouteScreen
 import com.rada.android.features.report.ReportRouteScreen
 import com.rada.android.features.settings.SettingsRouteScreen
+import com.rada.android.features.signup.SignUpRouteScreen
 import com.rada.android.features.splash.SplashRouteScreen
 import com.rada.android.screens.RadaBottomBar
 import com.rada.android.screens.RadaTab
@@ -109,7 +109,7 @@ fun RadaNavHost() {
 
             composable(RadaDestination.Onboarding.route) {
                 OnboardingRouteScreen(onDone = {
-                    navController.navigate(RadaDestination.Login.route) {
+                    navController.navigate(RadaDestination.SignUp.route) {
                         popUpTo(RadaDestination.Onboarding.route) { inclusive = true }
                     }
                 })
@@ -117,44 +117,35 @@ fun RadaNavHost() {
 
             composable(RadaDestination.Login.route) {
                 LoginRouteScreen(
-                    onNavigateToOtp = { verificationId, e164Phone ->
-                        navController.navigate(
-                            RadaDestination.Otp.createRoute(verificationId = verificationId, phoneDisplay = e164Phone)
-                        )
-                    },
                     onSignedInDirectly = {
                         navController.navigate(RadaDestination.Dashboard.route) {
-                            popUpTo(RadaDestination.Login.route) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
                         }
                     },
                     onNavigateToCompleteProfile = {
                         navController.navigate(RadaDestination.CompleteProfile.route) {
-                            popUpTo(RadaDestination.Login.route) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
                         }
-                    }
+                    },
+                    onCreateAccount = { navController.navigate(RadaDestination.SignUp.route) }
                 )
             }
 
-            composable(
-                RadaDestination.Otp.route,
-                arguments = listOf(
-                    navArgument("verificationId") { type = NavType.StringType },
-                    navArgument("phoneDisplay") { type = NavType.StringType }
-                )
-            ) { backStackEntry ->
-                val verificationId = backStackEntry.arguments?.getString("verificationId").orEmpty()
-                val phoneDisplay = backStackEntry.arguments?.getString("phoneDisplay").orEmpty()
-                OtpRouteScreen(
-                    verificationId = verificationId,
-                    phoneDisplay = phoneDisplay,
-                    onVerified = {
+            composable(RadaDestination.SignUp.route) {
+                SignUpRouteScreen(
+                    onSignedIn = {
                         navController.navigate(RadaDestination.Dashboard.route) {
-                            popUpTo(RadaDestination.Login.route) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
                         }
                     },
                     onNavigateToCompleteProfile = {
                         navController.navigate(RadaDestination.CompleteProfile.route) {
-                            popUpTo(RadaDestination.Login.route) { inclusive = true }
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    onHaveAccount = {
+                        navController.navigate(RadaDestination.Login.route) {
+                            popUpTo(RadaDestination.SignUp.route) { inclusive = true }
                         }
                     }
                 )

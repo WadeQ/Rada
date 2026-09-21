@@ -11,7 +11,8 @@ data class ActiveAlert(
     val type: ReportType,
     val distanceMeters: Int,
     val speedLimitKmh: Int?,
-    val placeName: String? = null
+    val placeName: String? = null,
+    val approximate: Boolean = false
 )
 
 data class DriveState(

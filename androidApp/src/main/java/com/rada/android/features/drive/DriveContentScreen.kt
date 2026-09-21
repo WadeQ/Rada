@@ -51,6 +51,7 @@ import com.rada.android.screens.BOTTOM_BAR_CLEARANCE
 import com.rada.android.components.ShimmerBlock
 import com.rada.android.theme.RadaColors
 import com.rada.shared.domain.ReportType
+import com.rada.shared.domain.SpeedRules
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.MapsInitializer
 import com.google.android.gms.maps.model.BitmapDescriptor
@@ -104,10 +105,22 @@ fun DriveContentScreen(
                     val typePrefix = if (alert.placeName != null) {
                         (if (alert.type == ReportType.CHECKPOINT) "Police checkpoint · " else "Speed camera · ")
                     } else ""
+                    val approxText = if (alert.approximate) " · approx. location" else ""
                     Text(
-                        "$typePrefix${alert.distanceMeters} m$limitText",
+                        "$typePrefix${alert.distanceMeters} m$limitText$approxText",
                         color = RadaColors.AmberInk.copy(alpha = 0.75f), fontSize = 11.sp
                     )
+                    val penaltyText = alert.speedLimitKmh?.let { limit ->
+                        when (val penalty = SpeedRules.penaltyFor(state.currentSpeedKmh.toDouble(), limit.toDouble())) {
+                            is SpeedRules.Penalty.Warning -> "Over the limit · warning"
+                            is SpeedRules.Penalty.Fine -> "${state.currentSpeedKmh - limit} km/h over · KES ${"%,d".format(penalty.kes)} fine"
+                            is SpeedRules.Penalty.BeyondInstantFines -> "${state.currentSpeedKmh - limit} km/h over · beyond instant fines"
+                            else -> null
+                        }
+                    }
+                    if (penaltyText != null) {
+                        Text(penaltyText, color = RadaColors.AmberInk, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -377,7 +390,7 @@ private fun DriveMap(state: DriveState) {
                 Marker(
                     state = MarkerState(position = LatLng(camera.latitude, camera.longitude)),
                     title = camera.placeName ?: typeLabel,
-                    snippet = typeLabel
+                    snippet = if (camera.approximate) "$typeLabel · approximate location" else typeLabel
                 )
             }
             val icon = carIcon
