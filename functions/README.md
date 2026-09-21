@@ -1,6 +1,6 @@
 # Rada payments backend (M-Pesa Daraja STK push)
 
-Cloud Functions (Node 20, region `europe-west1`) that start an STK push, receive Safaricom's
+Cloud Functions (Node 24, region `europe-west1`) that start an STK push, receive Safaricom's
 callback and grant Pro by writing `users/{uid}.proUntil`. The app never sees Daraja credentials.
 
 | Function | Trigger | What it does |
