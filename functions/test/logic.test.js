@@ -3,7 +3,7 @@ const assert = require("node:assert");
 const { normalizeKenyanPhone, maskPhone } = require("../phone");
 const { timestamp, password } = require("../daraja");
 const { planFor } = require("../plans");
-const { applyResult, callbackFields } = require("../payments");
+const { applyResult, callbackFields, friendlyMessage } = require("../payments");
 
 test("phone normalisation", () => {
   for (const v of ["0719731685", "719731685", "+254719731685", "254719731685", "0719 731 685"]) {
@@ -71,4 +71,14 @@ test("wrong amount, cancel and unknown payment never grant Pro", async () => {
 test("callback metadata parsing", () => {
   const stk = { CallbackMetadata: { Item: [{ Name: "Amount", Value: 150 }, { Name: "MpesaReceiptNumber", Value: "XYZ" }] } };
   assert.deepStrictEqual(callbackFields(stk), { amount: 150, receipt: "XYZ" });
+});
+
+test("Daraja result codes get friendly messages", async () => {
+  assert.match(friendlyMessage(1037), /couldn't reach your phone/);
+  assert.match(friendlyMessage(2001), /PIN/);
+  assert.match(friendlyMessage(9999), /didn't go through/);
+  const db = fakeDb({ status: "pending", uid: "u1", planId: "monthly", amount: 150 }, {});
+  await applyResult(db, FV, "p1", { resultCode: 1037, resultDesc: "DS timeout user cannot be reached" });
+  assert.strictEqual(db.store.payments.p1.status, "failed");
+  assert.match(db.store.payments.p1.resultDesc, /couldn't reach your phone/);
 });

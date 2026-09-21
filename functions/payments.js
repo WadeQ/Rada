@@ -8,6 +8,18 @@ function callbackFields(stk) {
   return { amount: get("Amount"), receipt: get("MpesaReceiptNumber") };
 }
 
+const FRIENDLY = {
+  1: "Your M-Pesa balance is too low for this payment.",
+  1025: "We couldn't send the M-Pesa prompt. Try again.",
+  1032: "You cancelled the payment.",
+  1037: "We couldn't reach your phone for the M-Pesa prompt. Check the number and your network, then try again.",
+  2001: "Wrong M-Pesa PIN. Try again.",
+};
+
+function friendlyMessage(resultCode) {
+  return FRIENDLY[Number(resultCode)] || "The payment didn't go through. Try again.";
+}
+
 function failureStatus(resultCode) {
   return Number(resultCode) === 1032 ? "cancelled" : "failed";
 }
@@ -25,7 +37,7 @@ async function applyResult(db, FieldValue, checkoutRequestId, { resultCode, resu
       tx.update(ref, {
         status: failureStatus(resultCode),
         resultCode: Number(resultCode),
-        resultDesc: resultDesc || null,
+        resultDesc: friendlyMessage(resultCode),
         completedAt: FieldValue.serverTimestamp(),
       });
       return { applied: true, status: failureStatus(resultCode) };
@@ -58,4 +70,4 @@ async function applyResult(db, FieldValue, checkoutRequestId, { resultCode, resu
   });
 }
 
-module.exports = { applyResult, callbackFields };
+module.exports = { applyResult, callbackFields, friendlyMessage };
