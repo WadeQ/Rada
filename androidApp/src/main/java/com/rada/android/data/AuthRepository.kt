@@ -34,6 +34,7 @@ interface AuthRepository {
     suspend fun signInWithApple(activity: Activity): SignInResult
     fun isSignedIn(): Boolean
     fun currentUserDisplayName(): String?
+    suspend fun reloadUser()
     suspend fun updateDisplayName(name: String)
     fun signOut()
 }
@@ -139,6 +140,10 @@ class FirebaseAuthRepository(
     override fun isSignedIn(): Boolean = auth.currentUser != null
 
     override fun currentUserDisplayName(): String? = auth.currentUser?.displayName
+
+    override suspend fun reloadUser() {
+        auth.currentUser?.reload()?.await()
+    }
 
     override suspend fun updateDisplayName(name: String) {
         runCatching {

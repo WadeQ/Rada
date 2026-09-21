@@ -33,6 +33,11 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.runtime.remember
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.PhotoCamera
@@ -126,9 +131,6 @@ fun SettingsContentScreen(
         ) {
             PhotoHeader(state, onPickPhoto, onRemove = { onIntent(SettingsIntent.RemovePhotoTapped) })
 
-            Spacer(Modifier.height(20.dp))
-            NameGroup(state, onIntent)
-
             Spacer(Modifier.height(24.dp))
             GroupLabel("Preferences")
             SettingsGroup {
@@ -216,84 +218,58 @@ private fun RowDivider(startIndent: Int = 52) {
 @Composable
 private fun PhotoHeader(state: SettingsState, onPick: () -> Unit, onRemove: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    var menuOpen by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.size(104.dp).clickable(onClick = onPick)) {
-            ProfileAvatar(name = state.nameInput, photoPath = state.photoPath, size = 104.dp)
+        Box(Modifier.size(104.dp)) {
+            ProfileAvatar(name = state.userName, photoPath = state.photoPath, size = 104.dp)
             Box(
                 Modifier
                     .align(Alignment.BottomEnd)
                     .size(34.dp)
                     .clip(CircleShape)
                     .background(RadaColors.Accent)
-                    .border(3.dp, colors.background, CircleShape),
+                    .border(3.dp, colors.background, CircleShape)
+                    .clickable { menuOpen = true },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Outlined.PhotoCamera,
-                    "Change photo",
+                    "Edit profile photo",
                     tint = RadaColors.AccentInk,
-                    modifier = Modifier.size(17.dp))
+                    modifier = Modifier.size(17.dp)
+                )
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    DropdownMenuItem(
+                        text = { Text(if (state.photoPath != null) "Change photo" else "Choose photo") },
+                        leadingIcon = { Icon(Icons.Outlined.Edit, null, modifier = Modifier.size(18.dp)) },
+                        onClick = {
+                            menuOpen = false
+                            onPick()
+                        }
+                    )
+                    if (state.photoPath != null) {
+                        DropdownMenuItem(
+                            text = { Text("Remove photo") },
+                            leadingIcon = { Icon(Icons.Outlined.Delete, null, modifier = Modifier.size(18.dp)) },
+                            onClick = {
+                                menuOpen = false
+                                onRemove()
+                            }
+                        )
+                    }
+                }
             }
         }
-        if (state.photoPath != null) {
+        if (state.userName.isNotBlank()) {
             Text(
-                "Remove photo",
-                color = colors.onSurfaceVariant,
-                fontSize = 13.sp,
-                modifier = Modifier
-                    .padding(top = 10.dp)
-                    .clip(CircleShape)
-                    .clickable(onClick = onRemove)
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                state.userName,
+                color = colors.onBackground,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(top = 12.dp)
             )
         }
-    }
-}
-
-@Composable
-private fun NameGroup(state: SettingsState, onIntent: (SettingsIntent) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val focus = LocalFocusManager.current
-
-    SettingsGroup {
-        Row(
-            Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Display name", color = colors.onSurfaceVariant, fontSize = 14.sp)
-            TextField(
-                value = state.nameInput,
-                onValueChange = { onIntent(SettingsIntent.NameInputChanged(it)) },
-                singleLine = true,
-                isError = state.nameError != null,
-                placeholder = { Text("Display name", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.End) },
-                textStyle = TextStyle(textAlign = TextAlign.End, fontSize = 15.sp),
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Words,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(onDone = { focus.clearFocus() }),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    errorContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    errorIndicatorColor = Color.Transparent,
-                    cursorColor = colors.onSurface
-                ),
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-    if (state.nameError != null) {
-        Text(
-            state.nameError,
-            color = colors.error,
-            fontSize = 12.sp,
-            modifier = Modifier.padding(start = 8.dp, top = 8.dp)
-        )
     }
 }
 

@@ -80,7 +80,7 @@ eye. 👁️
 | 👆 | **One-tap reporting** | Camera, checkpoint or alcohol check, one tap each. The tile floods with colour, you feel a haptic tick, and an **Undo** chip stays for five seconds so a mis-tap while driving is recoverable. |
 | 📊 | **Home dashboard** | Estimated fines avoided, a weekly line chart of reports by type (amber camera, blue checkpoint, red alcohol), and the newest alerts near you. |
 | 🆘 | **Roadside help** | Emergency numbers, tow companies and mechanics, one tap to call. |
-| 🎛️ | **Settings** | Profile photo, name, alert switch, an **Alert settings** sheet (warning distance and a **Test alert sound** button), a dark-mode switch and Log out. Everything saves as you change it; there is no Save button. |
+| 🎛️ | **Settings** | Your name (from your account) and profile photo (tap the camera to change or remove it), alert switch, an **Alert settings** sheet (warning distance and a **Test alert sound** button), a dark-mode switch and Log out. Everything saves as you change it; there is no Save button. |
 | 🌗 | **Light and dark themes** | A lime-on-ink identity with burgundy accents, and an adaptive launcher icon (with a themed variant on Android 13+). |
 | 👑 | **Rada Pro** | Try Drive **free for 7 days**, then unlock it with a Google Play subscription or a one-time M-Pesa payment. See [Pricing and payments](#-pricing-and-payments). |
 
