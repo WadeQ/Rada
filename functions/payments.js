@@ -1,4 +1,5 @@
 const { planFor } = require("./plans");
+const { currentExpiries, combinedProUntil } = require("./entitlement");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -56,9 +57,10 @@ async function applyResult(db, FieldValue, checkoutRequestId, { resultCode, resu
     const plan = planFor(payment.planId);
     const userRef = db.collection("users").doc(payment.uid);
     const userSnap = await tx.get(userRef);
-    const current = userSnap.exists && userSnap.data().proUntil ? userSnap.data().proUntil.toMillis() : 0;
-    const proUntil = new Date(Math.max(Date.now(), current) + plan.days * DAY_MS);
-    tx.set(userRef, { proUntil }, { merge: true });
+    const current = currentExpiries(userSnap.exists ? userSnap.data() : {});
+    const mpesaUntil = new Date(Math.max(Date.now(), current.mpesa) + plan.days * DAY_MS);
+    const proUntil = combinedProUntil({ mpesa: mpesaUntil.getTime(), play: current.play });
+    tx.set(userRef, { mpesaProUntil: mpesaUntil, proUntil }, { merge: true });
     tx.update(ref, {
       status: "success",
       receipt: receipt || null,

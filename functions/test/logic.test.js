@@ -4,6 +4,8 @@ const { normalizeKenyanPhone, maskPhone } = require("../phone");
 const { timestamp, password } = require("../daraja");
 const { planFor } = require("../plans");
 const { applyResult, callbackFields, friendlyMessage } = require("../payments");
+const { accountHash, playExpiryMillis, currentExpiries, combinedProUntil } = require("../entitlement");
+const { applyPlaySubscription } = require("../playSubscriptions");
 
 test("phone normalisation", () => {
   for (const v of ["0719731685", "719731685", "+254719731685", "254719731685", "0719 731 685"]) {
@@ -81,4 +83,78 @@ test("Daraja result codes get friendly messages", async () => {
   await applyResult(db, FV, "p1", { resultCode: 1037, resultDesc: "DS timeout user cannot be reached" });
   assert.strictEqual(db.store.payments.p1.status, "failed");
   assert.match(db.store.payments.p1.resultDesc, /couldn't reach your phone/);
+});
+
+const inDays = (d) => new Date(Date.now() + d * 864e5).toISOString();
+const sub = (state, days, productId = "rada_pro_monthly") => ({
+  subscriptionState: state,
+  latestOrderId: "GPA.1",
+  lineItems: [{ productId, expiryTime: inDays(days) }],
+});
+
+test("Play states map to access", () => {
+  for (const s of ["ACTIVE", "CANCELED", "IN_GRACE_PERIOD"]) {
+    assert.ok(playExpiryMillis(sub(`SUBSCRIPTION_STATE_${s}`, 5)) > Date.now(), s);
+  }
+  for (const s of ["ON_HOLD", "PAUSED", "EXPIRED", "PENDING"]) {
+    assert.strictEqual(playExpiryMillis(sub(`SUBSCRIPTION_STATE_${s}`, 5)), 0, s);
+  }
+  assert.strictEqual(playExpiryMillis(sub("SUBSCRIPTION_STATE_ACTIVE", 5, "some_other_product")), 0);
+  assert.strictEqual(playExpiryMillis(null), 0);
+});
+
+test("account hash is stable and hides the uid", () => {
+  assert.strictEqual(accountHash("abc"), accountHash("abc"));
+  assert.notStrictEqual(accountHash("abc"), accountHash("abd"));
+  assert.strictEqual(accountHash("abc").length, 32);
+  assert.ok(!accountHash("abc").includes("abc"));
+});
+
+test("proUntil is the later of M-Pesa and Play; legacy proUntil counts as M-Pesa", () => {
+  const t1 = ts(Date.now() + 5 * 864e5), t2 = ts(Date.now() + 40 * 864e5);
+  assert.strictEqual(combinedProUntil({ mpesa: 0, play: 0 }), null);
+  assert.strictEqual(combinedProUntil(currentExpiries({ mpesaProUntil: t1, playProUntil: t2 })).getTime(), t2.toMillis());
+  assert.deepStrictEqual(currentExpiries({ proUntil: t1 }), { mpesa: t1.toMillis(), play: 0 });
+});
+
+function playDb(users = {}, purchases = {}) {
+  const store = { users, playPurchases: purchases };
+  const ref = (col, id) => ({ col, id });
+  return {
+    store,
+    collection: (col) => ({ doc: (id) => ref(col, id) }),
+    runTransaction: async (fn) =>
+      fn({
+        get: async ({ col, id }) => ({ exists: !!store[col][id], data: () => store[col][id] }),
+        set: ({ col, id }, d, opts) => {
+          const next = opts && opts.merge ? { ...(store[col][id] || {}), ...d } : d;
+          for (const k of Object.keys(next)) if (next[k] && next[k].__delete) delete next[k];
+          store[col][id] = next;
+        },
+      }),
+  };
+}
+const FVD = { serverTimestamp: () => "ts", delete: () => ({ __delete: true }) };
+
+test("verified Play subscription grants Pro and keeps the longer M-Pesa time", async () => {
+  const db = playDb({ u1: { mpesaProUntil: ts(Date.now() + 90 * 864e5), proUntil: new Date(Date.now() + 90 * 864e5) } });
+  const r = await applyPlaySubscription(db, FVD, { uid: "u1", purchaseToken: "tok", sub: sub("SUBSCRIPTION_STATE_ACTIVE", 30) });
+  assert.strictEqual(r.applied, true);
+  assert.ok(db.store.users.u1.proUntil.getTime() > Date.now() + 80 * 864e5, "later M-Pesa expiry wins");
+  assert.ok(db.store.users.u1.playProUntil.getTime() > Date.now());
+  assert.strictEqual(db.store.playPurchases.tok.uid, "u1");
+});
+
+test("an expired Play subscription removes Play time but not M-Pesa time", async () => {
+  const db = playDb({ u1: { playProUntil: new Date(Date.now() + 5 * 864e5) } }, { tok: { uid: "u1" } });
+  await applyPlaySubscription(db, FVD, { uid: "u1", purchaseToken: "tok", sub: sub("SUBSCRIPTION_STATE_EXPIRED", -1) });
+  assert.strictEqual(db.store.users.u1.playProUntil, undefined);
+  assert.strictEqual(db.store.users.u1.proUntil, undefined);
+});
+
+test("a purchase token can't be claimed by a second account", async () => {
+  const db = playDb({}, { tok: { uid: "owner" } });
+  const r = await applyPlaySubscription(db, FVD, { uid: "thief", purchaseToken: "tok", sub: sub("SUBSCRIPTION_STATE_ACTIVE", 30) });
+  assert.strictEqual(r.applied, false);
+  assert.strictEqual(db.store.users.thief, undefined);
 });
