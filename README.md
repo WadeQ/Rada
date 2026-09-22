@@ -255,9 +255,7 @@ firestore.rules  Security rules for reports, payments and accounts
   display, sharing live state with the phone's Drive screen via `CarDriveState`. Declared under
   the **IoT** category — the pragmatic fit among Google's fixed Car App Library categories
   (Navigation, POI, IoT, Weather, Media, Messaging, Calling), since Rada does proximity alerts,
-  not turn-by-turn routing. **Confirmed:** the system correctly resolves the service via
-  `dumpsys package`. **Not yet confirmed:** how it actually looks and behaves on a real head
-  unit — there's no Android Auto hardware to test against here. Enable **Settings → About →
+  not turn-by-turn routing. **Confirmed:** the system correctly resolves the service via `dumpsys package`, and a real car test found and fixed a genuine bug — the host validator was empty (trusting *no* host, not even Android Auto's own), so the car couldn't connect regardless of Unknown Sources. Debug builds now trust any host; production would need Google's real host allowlist here instead. **Not yet confirmed:** whether it now actually shows up and how it looks on a real head unit. Enable **Settings → About →
   (tap build number) → Developer options → Unknown sources** in the Android Auto app on your
   phone to sideload-test this before it's on Play; that gate also means the IoT-category choice
   may need Google's sign-off to be honest and stable for a real public listing later.
