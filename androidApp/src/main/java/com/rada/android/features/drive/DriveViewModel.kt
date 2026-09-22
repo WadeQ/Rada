@@ -7,6 +7,7 @@ import com.rada.android.data.ReportRepository
 import com.rada.android.data.StatsRepository
 import com.rada.android.tracking.AlertNotifications
 import com.rada.android.tracking.AlertSpeaker
+import com.rada.android.car.CarDriveState
 import com.rada.android.domain.isVisibleTo
 import com.rada.android.mvi.MviViewModel
 import com.rada.shared.data.MockData
@@ -112,13 +113,16 @@ class DriveViewModel(
             }
         }
 
+        CarDriveState.trackingStarted()
         startLocation()
     }
 
     private fun handleWarning(camera: SpeedCamera, distanceMeters: Double) {
         if (!camera.type.isVisibleTo(isPro)) return
         stats.recordWarning()
-        if (alertsEnabled) speaker.warn(camera.type, distanceMeters.toInt(), camera.placeName, camera.speedLimit.takeIf { it > 0 }?.toInt())
+        val limitKmh = camera.speedLimit.takeIf { it > 0 }?.toInt()
+        if (alertsEnabled) speaker.warn(camera.type, distanceMeters.toInt(), camera.placeName, limitKmh)
+        CarDriveState.warningFired(camera.type, distanceMeters.toInt(), limitKmh, camera.placeName)
         if (!inForeground && alertsEnabled) {
             notifications.post(camera.id, camera.type, distanceMeters.toInt(), camera.placeName)
         }
@@ -158,10 +162,14 @@ class DriveViewModel(
                 val nearby = nearbyAll.filter { it.type.isVisibleTo(isPro) }
                 val locked = nearbyAll.size - nearby.size
                 setState { copy(nearbyCameraCount = nearby.size, nearbyCameras = nearby, lockedNearbyCount = locked) }
+                CarDriveState.updateDriving(driverState.speedCurrent.toInt(), nearby.size)
 
                 setState {
                     val alert = activeAlert
-                    if (alert != null && nearby.none { it.id == alert.cameraId }) copy(activeAlert = null) else this
+                    if (alert != null && nearby.none { it.id == alert.cameraId }) {
+                        CarDriveState.alertCleared()
+                        copy(activeAlert = null)
+                    } else this
                 }
 
                 finalWarned.retainAll(nearby.map { it.id }.toSet())
@@ -172,6 +180,7 @@ class DriveViewModel(
                         driverState.latitude, driverState.longitude, camera.latitude, camera.longitude, result
                     )
                     setState { copy(activeAlert = activeAlert?.copy(distanceMeters = result[0].toInt())) }
+                    CarDriveState.alertDistanceUpdated(result[0].toInt())
                     if (alertsEnabled && result[0] <= FINAL_WARNING_METERS && finalWarned.add(camera.id)) {
                         speaker.finalWarning()
                     }
@@ -179,7 +188,10 @@ class DriveViewModel(
 
                 engine.evaluateDriverSafety(driverState, object : SpeedAlertEngine.AlertListener {
                     override fun onOutcome(camera: SpeedCamera, evaded: Boolean, speedKmh: Double, limitKmh: Double) {
-                        if (evaded) stats.recordEvaded()
+                        if (evaded) {
+                            stats.recordEvaded()
+                            CarDriveState.cameraEvaded()
+                        }
                     }
 
                     override fun onWarning(camera: SpeedCamera, currentSpeed: Double, distanceMeters: Double) {

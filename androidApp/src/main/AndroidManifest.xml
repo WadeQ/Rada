@@ -48,6 +48,18 @@
             android:name=".tracking.TrackingService"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <service
+            android:name=".car.RadaCarAppService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="androidx.car.app.CarAppService" />
+                <category android:name="androidx.car.app.category.IOT" />
+            </intent-filter>
+        </service>
+        <meta-data
+            android:name="androidx.car.app.minCarApiLevel"
+            android:value="1" />
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />

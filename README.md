@@ -250,9 +250,18 @@ firestore.rules  Security rules for reports, payments and accounts
   category Google Maps and Waze use, so they duck your music and should play over Bluetooth or
   Android Auto automatically. **Not yet confirmed on a real Android Auto head unit** — please try
   it and tell us what you hear.
-- **A native Android Auto or CarPlay screen is a bigger step**, not yet started: it needs the
-  location tracking moved into the always-on service, Google's car app templates, and a category
-  approval from Google; CarPlay needs a real iOS app first and an Apple entitlement.
+- **A first Android Auto screen exists now.** `RadaCarAppService` shows current speed, the active
+  alert (with distance and speed limit) and a "this drive" evaded/warnings count on the car's
+  display, sharing live state with the phone's Drive screen via `CarDriveState`. Declared under
+  the **IoT** category — the pragmatic fit among Google's fixed Car App Library categories
+  (Navigation, POI, IoT, Weather, Media, Messaging, Calling), since Rada does proximity alerts,
+  not turn-by-turn routing. **Confirmed:** the system correctly resolves the service via
+  `dumpsys package`. **Not yet confirmed:** how it actually looks and behaves on a real head
+  unit — there's no Android Auto hardware to test against here. Enable **Settings → About →
+  (tap build number) → Developer options → Unknown sources** in the Android Auto app on your
+  phone to sideload-test this before it's on Play; that gate also means the IoT-category choice
+  may need Google's sign-off to be honest and stable for a real public listing later.
+- **CarPlay** needs a real iOS app first and an Apple entitlement — not started.
 
 ## 🗺️ Where things stand
 
