@@ -118,7 +118,7 @@ class DriveViewModel(
     private fun handleWarning(camera: SpeedCamera, distanceMeters: Double) {
         if (!camera.type.isVisibleTo(isPro)) return
         stats.recordWarning()
-        if (alertsEnabled) speaker.warn(camera.type, distanceMeters.toInt(), camera.placeName)
+        if (alertsEnabled) speaker.warn(camera.type, distanceMeters.toInt(), camera.placeName, camera.speedLimit.takeIf { it > 0 }?.toInt())
         if (!inForeground && alertsEnabled) {
             notifications.post(camera.id, camera.type, distanceMeters.toInt(), camera.placeName)
         }

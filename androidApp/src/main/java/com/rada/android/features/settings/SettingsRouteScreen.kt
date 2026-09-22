@@ -58,7 +58,7 @@ fun SettingsRouteScreen(
         onPickPhoto = {
             photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
         },
-        onTestSound = { speaker.warn(ReportType.CAMERA, 300, "Thika Road") },
+        onTestSound = { speaker.warn(ReportType.CAMERA, 300, "Thika Road", speedLimitKmh = 80) },
         onIntent = viewModel::onIntent,
         onHome = onHome,
         onDrive = onDrive,

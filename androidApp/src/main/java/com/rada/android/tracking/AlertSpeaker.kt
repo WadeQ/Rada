@@ -44,7 +44,7 @@ class AlertSpeaker(context: Context) {
         }
     }
 
-    fun warn(type: ReportType, distanceMeters: Int, placeName: String?) {
+    fun warn(type: ReportType, distanceMeters: Int, placeName: String?, speedLimitKmh: Int? = null) {
         val what = when (type) {
             ReportType.CAMERA -> "Speed camera"
             ReportType.CHECKPOINT -> "Police checkpoint"
@@ -52,9 +52,12 @@ class AlertSpeaker(context: Context) {
         }
         val rounded = if (distanceMeters >= 100) (distanceMeters / 50) * 50 else (distanceMeters / 10) * 10
         val where = placeName?.let { ", $it" } ?: ""
+        val limit = if (type == ReportType.CAMERA && speedLimitKmh != null && speedLimitKmh > 0) {
+            " Limit $speedLimitKmh kilometres per hour."
+        } else ""
         acquireFocus()
         play(CHIME_TWO_TONE)
-        handler.postDelayed({ speak("$what ahead$where. $rounded metres.") }, CHIME_TWO_TONE_MS + 150)
+        handler.postDelayed({ speak("$what ahead$where. $rounded metres.$limit") }, CHIME_TWO_TONE_MS + 150)
     }
 
     fun finalWarning() {
