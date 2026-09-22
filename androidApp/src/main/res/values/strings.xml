@@ -1,0 +1,8 @@
+<resources>
+    <string name="shortcut_camera_short">Report camera</string>
+    <string name="shortcut_camera_long">Report a speed camera</string>
+    <string name="shortcut_checkpoint_short">Report checkpoint</string>
+    <string name="shortcut_checkpoint_long">Report a police checkpoint</string>
+    <string name="shortcut_alcohol_short">Report alcohol check</string>
+    <string name="shortcut_alcohol_long">Report an alcohol check</string>
+</resources>

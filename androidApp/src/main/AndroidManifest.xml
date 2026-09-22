@@ -33,7 +33,17 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
         </activity>
+        <activity
+            android:name=".QuickReportActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Rada.Translucent"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:launchMode="singleInstance" />
         <service
             android:name=".tracking.TrackingService"
             android:exported="false"

@@ -236,6 +236,23 @@ docs/            screenshots, brand assets, camera data notes
 firestore.rules  Security rules for reports, payments and accounts
 ```
 
+## 🚙 Hands-free and in-car
+
+- **App shortcuts.** Long-press the Rada icon for **Report camera**, **Report checkpoint** and
+  **Report alcohol check**. Each submits instantly with your current location and speaks a short
+  confirmation ("Speed camera reported near Thika Road. Thanks for the heads-up.") with no screen
+  to look at. Falls back to opening the app if you're signed out or haven't granted location.
+- **Ready for "Hey Google, report a camera on Rada".** The shortcuts declare Google Assistant
+  App Action capabilities (`actions.intent.REPORT_CAMERA` and friends). Voice phrases still need
+  to be registered and tested in Play Console's App Actions tool before they work by voice.
+- **Alerts in the car.** The chime and spoken warnings use navigation-guidance audio, the same
+  category Google Maps and Waze use, so they duck your music and should play over Bluetooth or
+  Android Auto automatically. **Not yet confirmed on a real Android Auto head unit** — please try
+  it and tell us what you hear.
+- **A native Android Auto or CarPlay screen is a bigger step**, not yet started: it needs the
+  location tracking moved into the always-on service, Google's car app templates, and a category
+  approval from Google; CarPlay needs a real iOS app first and an Apple entitlement.
+
 ## 🗺️ Where things stand
 
 Legend: ✅ working · 🧪 tested, needs a live check · 🚧 in progress · 🔜 next

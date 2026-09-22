@@ -2,4 +2,12 @@
     <style name="Theme.Rada" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/ic_launcher_background</item>
     </style>
+
+    <style name="Theme.Rada.Translucent" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowDisablePreview">true</item>
+    </style>
 </resources>

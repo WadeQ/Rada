@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <shortcut
+        android:shortcutId="report_camera"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_camera"
+        android:shortcutShortLabel="@string/shortcut_camera_short"
+        android:shortcutLongLabel="@string/shortcut_camera_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.rada.android"
+            android:targetClass="com.rada.android.QuickReportActivity">
+            <extra android:name="report_type" android:value="CAMERA" />
+        </intent>
+        <capability-binding android:key="actions.intent.REPORT_CAMERA">
+            <parameter-binding android:key="report.type" android:value="camera" />
+        </capability-binding>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="report_checkpoint"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_checkpoint"
+        android:shortcutShortLabel="@string/shortcut_checkpoint_short"
+        android:shortcutLongLabel="@string/shortcut_checkpoint_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.rada.android"
+            android:targetClass="com.rada.android.QuickReportActivity">
+            <extra android:name="report_type" android:value="CHECKPOINT" />
+        </intent>
+        <capability-binding android:key="actions.intent.REPORT_CHECKPOINT">
+            <parameter-binding android:key="report.type" android:value="checkpoint" />
+        </capability-binding>
+    </shortcut>
+
+    <shortcut
+        android:shortcutId="report_alcohol"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_alcohol"
+        android:shortcutShortLabel="@string/shortcut_alcohol_short"
+        android:shortcutLongLabel="@string/shortcut_alcohol_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.rada.android"
+            android:targetClass="com.rada.android.QuickReportActivity">
+            <extra android:name="report_type" android:value="ALCOBLOW" />
+        </intent>
+        <capability-binding android:key="actions.intent.REPORT_ALCOBLOW">
+            <parameter-binding android:key="report.type" android:value="alcohol check" />
+        </capability-binding>
+    </shortcut>
+
+</shortcuts>

@@ -8,6 +8,7 @@ import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import com.rada.shared.domain.ReportType
 import java.util.Locale
@@ -59,6 +60,7 @@ class AlertSpeaker(context: Context) {
     fun finalWarning() {
         acquireFocus()
         play(CHIME_TRIPLE)
+        handler.postAtTime({ abandonFocus() }, ABANDON_TOKEN, SystemClock.uptimeMillis() + CHIME_TRIPLE_MS)
     }
 
     fun release() {
@@ -76,7 +78,7 @@ class AlertSpeaker(context: Context) {
             return
         }
         engine.speak(text, TextToSpeech.QUEUE_FLUSH, null, "rada-alert")
-        handler.postDelayed({ abandonFocus() }, SPEECH_FOCUS_HOLD_MS)
+        handler.postAtTime({ abandonFocus() }, ABANDON_TOKEN, SystemClock.uptimeMillis() + SPEECH_FOCUS_HOLD_MS)
     }
 
     private fun play(samples: ShortArray) {
@@ -98,6 +100,7 @@ class AlertSpeaker(context: Context) {
     }
 
     private fun acquireFocus() {
+        handler.removeCallbacksAndMessages(ABANDON_TOKEN)
         val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
             .setAudioAttributes(attributes)
             .build()
@@ -127,6 +130,8 @@ class AlertSpeaker(context: Context) {
 
         val CHIME_TWO_TONE = tone(880.0, 260) + silence(60) + tone(1175.0, 340)
         const val CHIME_TWO_TONE_MS = 660L
+        const val CHIME_TRIPLE_MS = 950L
+        val ABANDON_TOKEN = Any()
         val CHIME_TRIPLE = tone(1320.0, 140) + silence(70) + tone(1320.0, 140) + silence(70) + tone(1320.0, 220)
     }
 }
