@@ -106,7 +106,7 @@ class QuickReportActivity : ComponentActivity() {
     private companion object {
         const val EXTRA_REPORT_TYPE = "report_type"
         const val LOCATION_TIMEOUT_MS = 4_000L
-        const val GEOCODE_TIMEOUT_MS = 2_000L
+        const val GEOCODE_TIMEOUT_MS = 4_500L
         const val TTS_SHUTDOWN_DELAY_MS = 4_000L
 
         fun ReportType.spokenLabel() = when (this) {

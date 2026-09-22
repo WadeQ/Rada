@@ -21,7 +21,7 @@ class ReportViewModel(
 ) : MviViewModel<ReportIntent, ReportState, ReportEffect>(ReportState()) {
     companion object {
         private const val LOCATION_TIMEOUT_MS = 10_000L
-        private const val GEOCODE_TIMEOUT_MS = 2_000L
+        private const val GEOCODE_TIMEOUT_MS = 4_500L
     }
 
     private var undoWindowJob: Job? = null
