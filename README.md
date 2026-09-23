@@ -111,21 +111,35 @@ flowchart LR
   estimated fine is added to your month. If you didn't slow down, only the warning is counted.
 - **Fast lookups.** `CameraGridIndex` buckets cameras into ~1 km cells so each location update
   only checks the cameras around you.
-- **Survives the background.** Fixed a real bug: the app used to stop its own tracking service
-  the instant you left the Drive tab, which killed the foreground-service notification and left
-  Android free to throttle location delivery — exactly the moment a driver checks WhatsApp.
-  Tracking now keeps running across tabs and other apps until you stop it (the notification's
-  Stop action, or signing out); the service also asks Android to restart it if the OS is forced
-  to kill it. **Confirmed:** GPS fixes keep arriving with Drive off-screen and another app
-  fully in the foreground, on the emulator. **Not yet confirmed:** behaviour after the *whole
-  app process* is killed by an aggressive OEM battery manager on a real phone (see the battery
-  prompt below) — this needs a real, long drive to verify.
-  music, and a watchdog restarts location if GPS updates stall.
+- **Survives the background — including the process being killed outright.** Fixed two bugs, not
+  one. First: the app used to stop its own tracking service the instant you left the Drive tab,
+  which killed the foreground-service notification and left Android free to throttle location
+  delivery — exactly the moment a driver checks WhatsApp. Second, deeper one: the actual engine
+  (location, alerts, speech, stats) lived in the Drive screen's ViewModel, so even with the
+  service staying alive, a genuine OS process kill on a long drive — memory pressure, an
+  aggressive OEM battery manager — took real tracking down with it; only the notification came
+  back. `TrackingService` now owns the whole engine directly and resolves its own account access,
+  so a restart resumes real tracking, not just the notification. **Confirmed, not just reasoned
+  about:** on the emulator, `am kill` refuses to touch the process while the foreground service
+  is active (real protection); `am crash` (which does kill it) is followed by an automatic sticky
+  restart; and with the app fully closed — crashed, never reopened — driving a simulated route
+  toward a checkpoint fired a real warning (engine evaluation, spoken alert, notification) from
+  the restarted service alone. **Not yet confirmed:** behaviour over a real, long drive on an
+  actual phone, especially against Samsung-style aggressive battery management (see the battery
+  prompt below) — the emulator can prove the mechanism works, not that it survives every real OEM.
 
 > [!NOTE]
 > Camera locations come from public sources and reports. Some are **approximate** and are flagged as
 > such in the app. Spots still missing usable coordinates are listed in
 > [`docs/cameras-todo.md`](docs/cameras-todo.md).
+>
+> **The seeded speed-camera database is Nairobi-only** (5 known spots as of this writing) —
+> that's a data-coverage gap, not an engine limitation. **Checkpoint and alcohol-check alerts
+> work anywhere**, since those come entirely from other drivers' live reports, not the seeded
+> list — a checkpoint reported on a highway outside Nairobi is alertable the same way one in
+> Kilimani is. Expect a long drive out of the city to go quiet on speed-camera warnings
+> specifically, while still picking up checkpoint/alcohol reports if other drivers are using the
+> app out there.
 
 ## 💳 Pricing and payments
 
