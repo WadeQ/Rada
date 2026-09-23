@@ -3,9 +3,8 @@
 Cloud Functions (Node 24, region `europe-west1`) that verify a Google Play subscription purchase
 and grant Pro by writing `users/{uid}.proUntil`.
 
-> M-Pesa STK push (Safaricom Daraja) was removed after the production Till application was
-> rejected. Google Play — Visa, Mastercard and M-PESA GlobalPay virtual cards, all through Play
-> Billing — is the only payment route for now.
+> Google Play Billing — Visa, Mastercard and M-PESA GlobalPay virtual cards, all through Play —
+> is the only payment route.
 
 | Function | Trigger | What it does |
 |---|---|---|

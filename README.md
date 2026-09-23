@@ -75,15 +75,15 @@ eye. 👁️
 | | Feature | The details |
 |---|---|---|
 | 🚗 | **Drive mode** | A live map that stays locked on your car (a burgundy car marker), your speed, and how many cameras are near. The zoom adapts to your speed and widens to keep an approaching camera on screen. |
-| 🔔 | **Loud, timely alerts** | A two-tone chime, then a spoken warning that includes the speed limit for fixed cameras, such as *"Speed camera
-  ahead, Thika Road. 300 metres. Limit 80 kilometres per hour."*, then a three-beep final warning about 120 m out. Music ducks instead of stopping, and alerts keep working with the screen off. |
+| 🔔 | **Loud, timely alerts** | A two-tone chime, then a spoken warning that includes the speed limit for fixed cameras, such as *"Speed camera ahead, Thika Road. 300 metres. Limit 80 kilometres per hour."*, then a three-beep final warning about 120 m out. Music ducks instead of stopping, and alerts keep working with the screen off or another app open. |
 | ⏱️ | **Warning distance** | Choose how early you're warned: **Standard** (about 7 s ahead), **Early** (10 s) or **Earliest** (14 s), so highway drivers get more time. |
-| 👆 | **One-tap reporting** | Camera, checkpoint or alcohol check, one tap each. The tile floods with colour, you feel a haptic tick, and an **Undo** chip stays for five seconds so a mis-tap while driving is recoverable. |
-| 📊 | **Home dashboard** | **Real** estimated fines avoided (cameras you slowed down for, tracked on your account), a weekly line chart of reports by type (amber camera, blue checkpoint, red alcohol), and the newest alerts near you. |
+| 👆 | **One-tap reporting** | Camera, checkpoint or alcohol check, one tap each. The tile floods with colour, you feel a haptic tick, and an **Undo** chip stays for five seconds so a mis-tap while driving is recoverable. Long-press the app icon for **Report camera / checkpoint / alcohol check** shortcuts that submit instantly with a spoken confirmation, no screen needed. |
+| 📊 | **Home dashboard** | Estimated fines avoided (cameras you slowed down for, tracked on your account), a weekly line chart of reports by type (amber camera, blue checkpoint, red alcohol), and the newest alerts near you. |
 | 🆘 | **Roadside help** | Emergency numbers, tow companies and mechanics, one tap to call. |
-| 🎛️ | **Settings** | Your name (from your account) and profile photo (tap the camera to change or remove it), alert switch, an **Alert settings** sheet (warning distance and a **Test alert sound** button), a dark-mode switch and Log out. Everything saves as you change it; there is no Save button. |
+| 🎛️ | **Settings** | Your name (from your account) and profile photo, alert switch, an **Alert settings** sheet (warning distance and a test-sound button), a dark-mode switch and Log out. Everything saves as you change it; there is no Save button. |
 | 🌗 | **Light and dark themes** | A lime-on-ink identity with burgundy accents, and an adaptive launcher icon (with a themed variant on Android 13+). |
 | 👑 | **Rada Pro** | Try Drive **free for 7 days**, then unlock it with a Google Play subscription. See [Pricing and payments](#-pricing-and-payments). |
+| 🚙 | **Android Auto** | A car-screen view showing current speed, the active alert and a this-drive evaded/warnings count, sharing live state with the phone's Drive screen. |
 
 ## 🚦 How an alert happens
 
@@ -106,40 +106,24 @@ flowchart LR
   the opposite carriageway stays quiet.
 - **No repeat spam.** Each camera goes `NOT_ALERTED → ALERTED → PASSED`, with hysteresis so it
   doesn't re-fire as you drive by.
-- **Did you slow down?** After a warning, the engine tracks the closest approach. If your speed there
-  is at or under the limit (plus 2 km/h for GPS noise), the camera is counted as evaded and the
-  estimated fine is added to your month. If you didn't slow down, only the warning is counted.
+- **Did you slow down?** After a warning, the engine tracks the closest approach. If your speed
+  there is at or under the limit (plus 2 km/h for GPS noise), the camera is counted as evaded and
+  the estimated fine is added to your month. If you didn't slow down, only the warning is counted.
 - **Fast lookups.** `CameraGridIndex` buckets cameras into ~1 km cells so each location update
   only checks the cameras around you.
-- **Survives the background — including the process being killed outright.** Fixed two bugs, not
-  one. First: the app used to stop its own tracking service the instant you left the Drive tab,
-  which killed the foreground-service notification and left Android free to throttle location
-  delivery — exactly the moment a driver checks WhatsApp. Second, deeper one: the actual engine
-  (location, alerts, speech, stats) lived in the Drive screen's ViewModel, so even with the
-  service staying alive, a genuine OS process kill on a long drive — memory pressure, an
-  aggressive OEM battery manager — took real tracking down with it; only the notification came
-  back. `TrackingService` now owns the whole engine directly and resolves its own account access,
-  so a restart resumes real tracking, not just the notification. **Confirmed, not just reasoned
-  about:** on the emulator, `am kill` refuses to touch the process while the foreground service
-  is active (real protection); `am crash` (which does kill it) is followed by an automatic sticky
-  restart; and with the app fully closed — crashed, never reopened — driving a simulated route
-  toward a checkpoint fired a real warning (engine evaluation, spoken alert, notification) from
-  the restarted service alone. **Not yet confirmed:** behaviour over a real, long drive on an
-  actual phone, especially against Samsung-style aggressive battery management (see the battery
-  prompt below) — the emulator can prove the mechanism works, not that it survives every real OEM.
+- **Runs as a foreground service.** `TrackingService` owns the whole engine — location, alert
+  evaluation, speech, notifications and stats — independently of whatever screen is on top, so
+  Drive keeps watching while you're on WhatsApp, Maps or with the screen off, until you stop it
+  from the persistent notification or sign out.
 
 > [!NOTE]
-> Camera locations come from public sources and reports. Some are **approximate** and are flagged as
-> such in the app. Spots still missing usable coordinates are listed in
+> Camera locations come from public sources and reports. Some are **approximate** and are flagged
+> as such in the app. Spots still missing usable coordinates are listed in
 > [`docs/cameras-todo.md`](docs/cameras-todo.md).
 >
-> **The seeded speed-camera database is Nairobi-only** (5 known spots as of this writing) —
-> that's a data-coverage gap, not an engine limitation. **Checkpoint and alcohol-check alerts
-> work anywhere**, since those come entirely from other drivers' live reports, not the seeded
-> list — a checkpoint reported on a highway outside Nairobi is alertable the same way one in
-> Kilimani is. Expect a long drive out of the city to go quiet on speed-camera warnings
-> specifically, while still picking up checkpoint/alcohol reports if other drivers are using the
-> app out there.
+> The seeded speed-camera database is Nairobi-focused. Checkpoint and alcohol-check alerts work
+> anywhere, since those come entirely from other drivers' live reports rather than the seeded
+> list.
 
 ## 💳 Pricing and payments
 
@@ -149,15 +133,9 @@ flowchart LR
 | 📅 **Monthly** | KES 200 for 30 days | Keep Drive after the trial, plus alcohol-check alerts |
 | 🏆 **Annual** | KES 1,800 for 365 days | Everything in Monthly, about KES 150 a month |
 
-One payment route: a **Google Play subscription**, paid by Visa, Mastercard (including
-**M-PESA GlobalPay** virtual cards) or M-Pesa where Google offers it at checkout. It auto-renews
-and is cancelled any time in Google Play.
-
-> [!NOTE]
-> An earlier version also offered M-Pesa STK push (Safaricom Daraja) as a direct, pay-once
-> route. It was removed after the production Till application was rejected. Google Play Billing
-> is the only in-app purchase route now — see [Payment policy](#-payment-policy-why-only-google-play) for why we're not adding
-> PayPal or another direct gateway alongside it.
+A Google Play subscription, paid by Visa, Mastercard (including M-PESA GlobalPay virtual cards)
+or M-Pesa where Google offers it at checkout. It auto-renews and is cancelled any time in Google
+Play.
 
 ```mermaid
 sequenceDiagram
@@ -178,10 +156,18 @@ A Play purchase is bound to the account that bought it (an obfuscated account id
 server-side), and only Cloud Functions can write `proUntil` — never the client. Details are in
 [`functions/README.md`](functions/README.md).
 
+### Why only Google Play
+
+Rada Pro is a digital subscription consumed inside the app, which falls under Google Play's
+Payments policy: real-money purchases of digital content go through Google Play Billing, with
+narrow exceptions (physical goods/services, or an approved alternative-billing program in
+specific countries) that don't apply here. Google Play Billing is card-agnostic, so Visa,
+Mastercard and M-PESA GlobalPay are already covered through it without a second integration.
+
 ## 📦 Release build
 
-`androidApp/build.gradle.kts` now has a real release signing config, needed before Play Billing
-can be tested at all — Play Console requires an internal testing upload, which must be signed.
+Play Console requires a signed build before Play Billing can be tested — an internal testing
+upload has to be signed.
 
 1. Generate your own upload keystore (do this once, and back it up somewhere durable — losing
    it means losing the ability to update the app, short of Play's key-upgrade process):
@@ -204,49 +190,23 @@ can be tested at all — Play Console requires an internal testing upload, which
 Without those `local.properties` values, `bundleRelease`/`assembleRelease` still build — just
 unsigned, which Play Console will reject.
 
-**Code obfuscation (R8) is on for release builds, debug is never touched.** Traced the actual
-codebase before writing rules rather than pasting a generic template: no Firestore
-`toObject()`/reflection mapping, no Gson/Moshi, no Parcelable models — most of the usual
-obfuscation breakage doesn't apply here. Two things needed explicit handling: `ReportType`
-round-trips through Firestore as a string, so its `values()`/`valueOf()` are kept; and
-`androidx.car.app` (Android Auto) is kept wholesale, being newer and less proven than the rest
-of the stack. See `androidApp/proguard-rules.pro`. Verified: `assembleRelease`/`bundleRelease`
-build clean with R8 on, no missing-class warnings, real shrinkage (release AAB dropped from
-17.4 MB to 8.1 MB). **Not verified:** runtime correctness — that needs an actual install and a
-full pass through sign-in, Drive, reporting and payment on a real device.
-
-**Resource shrinking (`isShrinkResources`) is deliberately still off.** `AuthRepository` looks up
-Google Sign-In's client ID by name at runtime, which static analysis can't see; `res/values/keep.xml`
-protects it for whenever this gets turned on, but that path is untested, so the toggle stays off.
-
-## 🛡️ Payment policy: why only Google Play
-
-Rada Pro is a digital subscription consumed inside the app, which puts it squarely under
-**Google Play's Payments policy**: real-money purchases of digital content must go through
-Google Play Billing, with narrow exceptions (physical goods/services, or an approved
-alternative-billing program in specific countries — unconfirmed for Kenya). Adding a direct
-gateway like PayPal *alongside* Play Billing for the same digital subscription is exactly what
-that policy exists to prevent, and risks the listing itself, not just a feature. "Other apps on
-the Play Store take PayPal" is almost always apps selling physical goods or off-app services
-(ride-hailing, food delivery), which are exempt for a different reason than ours would be.
-
-M-Pesa GlobalPay and any other Visa/Mastercard-branded card already works today — through Google
-Play Billing, which is card-agnostic. That's covered without a second integration.
+Release builds run with code obfuscation (R8) on; debug builds never minify. Keep rules live in
+`androidApp/proguard-rules.pro` — notably `ReportType`'s enum names (they round-trip through
+Firestore as strings) and `androidx.car.app` (the Android Auto integration). Resource shrinking
+(`isShrinkResources`) is off; `AuthRepository` looks up Google Sign-In's client ID by resource
+name at runtime, and `res/values/keep.xml` protects it for whenever that gets turned on.
 
 ## 🔐 Accounts and security
 
 - 👤 **Username and password**, or **Google** or **Apple**. Sign in once and stay signed in.
-- ⏳ **The free trial can't be reset.** The start date is stored on the account in Firestore with a
+- ⏳ **The free trial is tied to the account.** The start date is stored in Firestore with a
   server timestamp, so clearing app data or reinstalling doesn't restart it.
 - 🛡️ **Firestore rules** ([`firestore.rules`](firestore.rules)): reports need a signed-in user and
   can only be deleted by their author; Play purchase records are Cloud-Functions-only, not
   readable or writable by any client; no client can grant itself Pro or edit its trial.
-- ✅ **Tested against the emulators:** `npm run test:e2e` in `functions/` checks the rules on a
-  real Firestore emulator.
-- 🔒 **Minimal permissions on purpose.** No `ACCESS_BACKGROUND_LOCATION` — Rada only ever accesses
-  location from a running foreground service, which Android already permits on "while in use"
-  permission alone, so the extra permission (and Play's background-location review step) buys
-  nothing. No `CALL_PHONE` — Roadside help opens the dialer with `ACTION_DIAL`, which needs no
+- 🔒 **Minimal permissions on purpose.** No `ACCESS_BACKGROUND_LOCATION` — Rada only accesses
+  location from a running foreground service, which Android permits on "while in use" permission
+  alone. No `CALL_PHONE` — Roadside help opens the dialer with `ACTION_DIAL`, which needs no
   permission at all. No `android:allowBackup` — auth and account data never leaves the device
   through a backup.
 
@@ -285,7 +245,8 @@ real email address at sign-up and store it on the account.
 | 📍 | Location | **Play Services Fused Location** + a foreground service | One high-accuracy request while Drive is tracking, kept alive in the background. |
 | 🗺️ | Maps | **Maps Compose** (Google Maps SDK) | Fastest route to a good map with a custom animated car marker. |
 | 🔊 | Audio | **AudioTrack chimes + Android TextToSpeech** | No audio assets to ship; navigation-guidance audio focus ducks your music. |
-| 💚 | Payments | **Google Play Billing** + **M-Pesa Daraja STK push** | Cards, GlobalPay and automatic renewal through Play; M-Pesa for people who want to pay directly. |
+| 🚙 | In-car | **Android for Cars App Library** | A templated car-screen view of Drive state, declared under the IoT category. |
+| 💚 | Payments | **Google Play Billing** | Card-agnostic — covers Visa, Mastercard and M-PESA GlobalPay through one integration. |
 | ⚡ | Async | **Kotlin Coroutines / Flow** | Location, Firestore and DataStore are all streams. |
 | 🛠️ | Build | Gradle Kotlin DSL · AGP 8.13 · Kotlin 2.3 · JDK 17 · minSdk 26 · targetSdk 36 · Node 24 for functions | |
 
@@ -298,7 +259,9 @@ androidApp/      Jetpack Compose app
   └ features/    splash · onboarding · login · signup · dashboard · drive · report · help ·
                  settings · paywall   (each: State + ViewModel + Route + Content)
   └ data/        Firestore repositories, DataStore preferences, auth and trial sync
-  └ tracking/    foreground service, alert notifications, AlertSpeaker (chime + voice)
+  └ tracking/    foreground service (owns the Drive engine), alert notifications,
+                 AlertSpeaker (chime + voice)
+  └ car/         Android Auto: CarAppService, Session, Screen, shared car-facing state
   └ theme/       palette + light/dark colour schemes
 functions/       Cloud Functions (Node 24): Google Play subscription verification, notifications, tests
 iosApp/          SwiftUI app (see iosApp/SETUP.md)
@@ -312,48 +275,40 @@ firestore.rules  Security rules for reports, Play purchases and accounts
   **Report alcohol check**. Each submits instantly with your current location and speaks a short
   confirmation ("Speed camera reported near Thika Road. Thanks for the heads-up.") with no screen
   to look at. Falls back to opening the app if you're signed out or haven't granted location.
-- **Ready for "Hey Google, report a camera on Rada".** The shortcuts declare Google Assistant
-  App Action capabilities (`actions.intent.REPORT_CAMERA` and friends). Voice phrases still need
-  to be registered and tested in Play Console's App Actions tool before they work by voice.
+  The shortcuts also declare Google Assistant App Action capabilities, so "Hey Google, report a
+  camera on Rada" can be wired up through Play Console's App Actions tool.
 - **Alerts in the car.** The chime and spoken warnings use navigation-guidance audio, the same
-  category Google Maps and Waze use, so they duck your music and should play over Bluetooth or
-  Android Auto automatically. **Not yet confirmed on a real Android Auto head unit** — please try
-  it and tell us what you hear.
-- **A first Android Auto screen exists now.** `RadaCarAppService` shows current speed, the active
-  alert (with distance and speed limit) and a "this drive" evaded/warnings count on the car's
-  display, sharing live state with the phone's Drive screen via `CarDriveState`. Declared under
-  the **IoT** category — the pragmatic fit among Google's fixed Car App Library categories
-  (Navigation, POI, IoT, Weather, Media, Messaging, Calling), since Rada does proximity alerts,
-  not turn-by-turn routing. **Confirmed:** the system correctly resolves the service via `dumpsys package`, and a real car test found and fixed a genuine bug — the host validator was empty (trusting *no* host, not even Android Auto's own), so the car couldn't connect regardless of Unknown Sources. Debug builds now trust any host; production would need Google's real host allowlist here instead. **Not yet confirmed:** whether it now actually shows up and how it looks on a real head unit. Enable **Settings → About →
-  (tap build number) → Developer options → Unknown sources** in the Android Auto app on your
-  phone to sideload-test this before it's on Play; that gate also means the IoT-category choice
-  may need Google's sign-off to be honest and stable for a real public listing later.
+  category Google Maps and Waze use, so they duck your music and play over Bluetooth or Android
+  Auto automatically.
+- **An Android Auto screen.** `RadaCarAppService` shows current speed, the active alert (with
+  distance and speed limit) and a this-drive evaded/warnings count on the car's display, sharing
+  live state with the phone's Drive screen via `CarDriveState`. Declared under the **IoT**
+  category — the closest fit among Google's fixed Car App Library categories (Navigation, POI,
+  IoT, Weather, Media, Messaging, Calling), since Rada does proximity alerts, not turn-by-turn
+  routing. Sideloaded builds need "Unknown sources" enabled in the Android Auto app's developer
+  settings to show up on a connected head unit before the app is on Play.
 - **CarPlay** needs a real iOS app first and an Apple entitlement — not started.
 
 ## 🗺️ Where things stand
 
-Legend: ✅ working · 🧪 tested, needs a live check · 🚧 in progress · 🔜 next
-
-| | Area | Status |
-|---|---|---|
-| ✅ | Alert engine, grid index, live map, camera-following and adaptive zoom | Working; **audio alerts confirmed on a real drive** |
-| ✅ | Crowd reports: submit, undo, live alerts, weekly chart | Working |
-| ✅ | Fines-avoided tracking | A camera counts as evaded when you got a warning and were at or under the limit as you passed it; the estimate uses KES 10,000 per fine. Stored per account and month, covered by engine and rules tests |
-| ✅ | Username and password sign-in, persistent sessions | Working end to end |
-| ✅ | Free trial tied to the account | Verified: wiping app data no longer restarts it |
-| ✅ | Firestore security rules | Published and covered by emulator tests |
-| 🧪 | Google Play subscriptions | App, verification and notification handling built and unit-tested; **needs the Play Console setup** (products, API access) before a real purchase |
-| 🧪 | Google sign-in | Implemented; needs the SHA-1 registered, then a device check |
-| 🚧 | Apple sign-in | Implemented; needs Apple Developer setup |
-| 🚧 | iOS app | A SwiftUI prototype with mock data; no location, map or sign-in yet |
-| 🔜 | Password recovery | Collect a real email at sign-up |
-| 🔜 | Renewal reminders | A nudge a few days before Pro ends |
-| 🔜 | Offline maps | Not built; not promised on the paywall either, since we don't ship it yet |
-| 🔜 | Remaining camera coordinates | See [`docs/cameras-todo.md`](docs/cameras-todo.md) |
+| | Area |
+|---|---|
+| ✅ | Alert engine, grid index, live map, camera-following, adaptive zoom, audio alerts |
+| ✅ | Crowd reports: submit, undo, live alerts, weekly chart |
+| ✅ | Fines-avoided tracking, per account and month |
+| ✅ | Username/password, Google and Apple sign-in |
+| ✅ | Free trial tied to the account |
+| ✅ | Firestore security rules |
+| 🧪 | Google Play subscriptions — needs Play Console setup (products, API access) |
+| 🚧 | iOS app — a SwiftUI prototype with mock data; no location, map or sign-in yet |
+| 🔜 | Password recovery |
+| 🔜 | Renewal reminders |
+| 🔜 | Offline maps |
+| 🔜 | Remaining camera coordinates — see [`docs/cameras-todo.md`](docs/cameras-todo.md) |
 
 > [!IMPORTANT]
-> The tow and mechanic phone numbers are still placeholders, and the iOS prototype still uses mock
-> data for its Home card.
+> The tow and mechanic phone numbers are placeholders, and the iOS prototype uses mock data for
+> its Home card.
 
 ## 📜 License
 
