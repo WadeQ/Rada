@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Google Sign-In's client ID is looked up by NAME at runtime (AuthRepository.webClientId),
+  not via a compile-time R.string.x reference — resource shrinking's reachability analysis
+  can't see that, so without this it would treat default_web_client_id/google_web_client_id
+  as unused and strip them, silently breaking Google sign-in. Kept here so shrinkResources
+  can be turned on later without re-discovering this the hard way.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/default_web_client_id,@string/google_web_client_id" />

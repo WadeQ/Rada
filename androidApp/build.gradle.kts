@@ -55,10 +55,13 @@ android {
 
     buildTypes {
         release {
-            // Minification is off for now: it needs a real signed build to test against R8's
-            // effect on Firebase/Billing/Compose before it's safe to turn on. Do that once you
-            // can sideload and run a release build, then flip this on and retest.
-            isMinifyEnabled = false
+            // Code shrinking/obfuscation: release only (debug never minifies, by how Android
+            // build variants work — there's no separate toggle needed for that). Resource
+            // shrinking (isShrinkResources) is deliberately NOT on yet: AuthRepository looks up
+            // a couple of string resources by name at runtime, which static reachability
+            // analysis can't see — res/values/keep.xml protects them for whenever it's turned on,
+            // but that's untested, so it stays off until it's been run on a real build.
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             if (releaseStoreFile != null) {
                 signingConfig = signingConfigs.getByName("release")
