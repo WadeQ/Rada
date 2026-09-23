@@ -1,5 +1,6 @@
 package com.rada.android.tracking
 
+import LocationProvider
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -8,30 +9,255 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.location.Location
 import android.os.Build
+import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.ProcessLifecycleOwner
+import com.google.android.gms.location.LocationServices
 import com.rada.android.MainActivity
+import com.rada.android.car.CarDriveState
+import com.rada.android.data.AlertPreferences
+import com.rada.android.data.DriveAccess
+import com.rada.android.data.FirestoreReportRepository
+import com.rada.android.data.ReportRepository
+import com.rada.android.data.StatsRepository
+import com.rada.android.domain.isVisibleTo
+import com.rada.android.features.drive.ActiveAlert
+import com.rada.shared.data.MockData
+import com.rada.shared.domain.CameraGridIndex
+import com.rada.shared.domain.SpeedAlertEngine
+import com.rada.shared.domain.SpeedCamera
+import com.rada.shared.location.AndroidLocationProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+/**
+ * Owns the entire Drive engine: location, the alert engine, speech, notifications, stats and
+ * the shared session state both the phone UI and the Android Auto screen read from. This used
+ * to live in DriveViewModel, tied to the Drive Compose screen's lifecycle — which meant a full
+ * app-process death (an aggressive OEM battery manager, memory pressure on a long drive) took
+ * the whole engine down with it even though this service, sticky, would try to restart itself:
+ * restarting the notification alone did nothing if nothing was left to actually track. Moving
+ * the engine here makes the service self-sufficient — a restart resumes real tracking, not just
+ * the notification.
+ */
+private const val ACTIVE_REPORT_MAX_AGE_MINUTES = 60L
+private const val LOCATION_STALL_WARNING_MS = 20_000L
+private const val STALE_AFTER_MS = 6_000L
+private const val MIN_SPEED_FOR_HEADING_KMH = 4.0
+private const val WATCHDOG_INTERVAL_MS = 2_000L
+private const val FINAL_WARNING_METERS = 120f
 
 class TrackingService : Service() {
+
+    private val serviceScope = CoroutineScope(SupervisorJob())
+    private var trackingStarted = false
+    private var locationJob: Job? = null
+    private var cameraIndex = CameraGridIndex(MockData.nairobiCameras + MockData.demoAlcoblowReport)
+    private val engine = SpeedAlertEngine(cameraIndex)
+    @Volatile private var hasAccess = false
+    @Volatile private var inForeground = true
+    @Volatile private var alertsEnabled = true
+    private var lastFixAt = 0L
+    private val finalWarned = mutableSetOf<String>()
+
+    private lateinit var locationProvider: LocationProvider
+    private lateinit var reportRepository: ReportRepository
+    private lateinit var speaker: AlertSpeaker
+    private lateinit var notifications: AlertNotifications
+    private lateinit var stats: StatsRepository
+
+    private val foregroundObserver = LifecycleEventObserver { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_START -> inForeground = true
+            Lifecycle.Event.ON_STOP -> inForeground = false
+            else -> Unit
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        locationProvider = AndroidLocationProvider(LocationServices.getFusedLocationProviderClient(this))
+        reportRepository = FirestoreReportRepository()
+        speaker = AlertSpeaker(this)
+        notifications = AlertNotifications(applicationContext)
+        stats = StatsRepository()
+        // Whether the app's UI is visible anywhere, not tied to which tab — replaces an older
+        // per-composable lifecycle observer that only knew about the Drive tab specifically.
+        ProcessLifecycleOwner.get().lifecycle.addObserver(foregroundObserver)
+    }
 
     override fun onBind(intent: Intent?) = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
+            stopTrackingAndSelf()
             return START_NOT_STICKY
         }
         ensureChannel(this)
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else 0
         ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), type)
-        // Sticky: if Android is forced to kill this process under memory pressure while a drive
-        // is active, it retries starting the service (with a null intent) so tracking resumes
-        // instead of silently staying off. The Drive screen's own watchdog and this service's
-        // notification are the only "was I tracking" signal we need to pick back up.
+        startTracking()
+        // Sticky, and now meaningfully so: a restart (intent == null) re-enters startTracking(),
+        // which needs nothing from the dead process — it resolves access, prefs and live reports
+        // fresh, and re-acquires GPS. See the class doc for why that distinction matters.
         return START_STICKY
+    }
+
+    private fun startTracking() {
+        if (trackingStarted) return
+        trackingStarted = true
+        CarDriveState.trackingStarted()
+
+        serviceScope.launch { DriveAccess.flow(applicationContext).collect { hasAccess = it } }
+        serviceScope.launch { AlertPreferences(applicationContext).alertsEnabled.collect { alertsEnabled = it } }
+        serviceScope.launch { AlertPreferences(applicationContext).warningLead.collect { engine.warningLead = it } }
+
+        serviceScope.launch {
+            reportRepository.observeActiveCameraReports(ACTIVE_REPORT_MAX_AGE_MINUTES).collect { reports ->
+                cameraIndex = CameraGridIndex(MockData.nairobiCameras + MockData.demoAlcoblowReport + reports)
+                engine.updateGridIndex(cameraIndex)
+            }
+        }
+
+        serviceScope.launch {
+            delay(LOCATION_STALL_WARNING_MS)
+            if (DrivingSession.state.value.isLoading) {
+                DrivingSession.update { it.copy(locationTakingTooLong = true) }
+            }
+        }
+
+        serviceScope.launch {
+            locationProvider.getLastKnownLocation()?.let { last ->
+                DrivingSession.update {
+                    if (it.currentLatitude == null) it.copy(currentLatitude = last.latitude, currentLongitude = last.longitude) else it
+                }
+            }
+        }
+
+        serviceScope.launch {
+            while (true) {
+                delay(WATCHDOG_INTERVAL_MS)
+                val running = locationJob?.isActive == true
+                if (running && SystemClock.elapsedRealtime() - lastFixAt > STALE_AFTER_MS) {
+                    if (!DrivingSession.state.value.gpsStale) DrivingSession.update { it.copy(gpsStale = true) }
+                    startLocation()
+                }
+            }
+        }
+
+        startLocation()
+    }
+
+    private fun handleWarning(camera: SpeedCamera, distanceMeters: Double) {
+        if (!camera.type.isVisibleTo(hasAccess)) return
+        stats.recordWarning()
+        val limitKmh = camera.speedLimit.takeIf { it > 0 }?.toInt()
+        if (alertsEnabled) speaker.warn(camera.type, distanceMeters.toInt(), camera.placeName, limitKmh)
+        CarDriveState.warningFired(camera.type, distanceMeters.toInt(), limitKmh, camera.placeName)
+        if (!inForeground && alertsEnabled) {
+            notifications.post(camera.id, camera.type, distanceMeters.toInt(), camera.placeName)
+        }
+        DrivingSession.update {
+            it.copy(
+                activeAlert = ActiveAlert(
+                    cameraId = camera.id,
+                    type = camera.type,
+                    distanceMeters = distanceMeters.toInt(),
+                    speedLimitKmh = limitKmh,
+                    placeName = camera.placeName,
+                    approximate = camera.approximate
+                )
+            )
+        }
+    }
+
+    private fun startLocation() {
+        locationJob?.cancel()
+        lastFixAt = SystemClock.elapsedRealtime()
+        locationJob = serviceScope.launch {
+            locationProvider.observeLocation().collect { driverState ->
+                lastFixAt = SystemClock.elapsedRealtime()
+                DrivingSession.update {
+                    it.copy(
+                        gpsStale = false,
+                        currentSpeedKmh = driverState.speedCurrent.toInt(),
+                        isLoading = false,
+                        locationTakingTooLong = false,
+                        currentLatitude = driverState.latitude,
+                        currentLongitude = driverState.longitude,
+                        bearingDegrees = if (driverState.speedCurrent > MIN_SPEED_FOR_HEADING_KMH) driverState.bearingCurrent else it.bearingDegrees
+                    )
+                }
+
+                val nearbyAll = cameraIndex.nearby(driverState.latitude, driverState.longitude)
+                val nearby = nearbyAll.filter { it.type.isVisibleTo(hasAccess) }
+                val locked = nearbyAll.size - nearby.size
+                DrivingSession.update { it.copy(nearbyCameraCount = nearby.size, nearbyCameras = nearby, lockedNearbyCount = locked) }
+                CarDriveState.updateDriving(driverState.speedCurrent.toInt(), nearby.size)
+
+                DrivingSession.update { state ->
+                    val alert = state.activeAlert
+                    if (alert != null && nearby.none { it.id == alert.cameraId }) {
+                        CarDriveState.alertCleared()
+                        state.copy(activeAlert = null)
+                    } else state
+                }
+
+                finalWarned.retainAll(nearby.map { it.id }.toSet())
+                DrivingSession.state.value.activeAlert?.let { alert ->
+                    val camera = nearby.firstOrNull { it.id == alert.cameraId } ?: return@let
+                    val result = FloatArray(1)
+                    Location.distanceBetween(
+                        driverState.latitude, driverState.longitude, camera.latitude, camera.longitude, result
+                    )
+                    DrivingSession.update { it.copy(activeAlert = it.activeAlert?.copy(distanceMeters = result[0].toInt())) }
+                    CarDriveState.alertDistanceUpdated(result[0].toInt())
+                    if (alertsEnabled && result[0] <= FINAL_WARNING_METERS && finalWarned.add(camera.id)) {
+                        speaker.finalWarning()
+                    }
+                }
+
+                engine.evaluateDriverSafety(driverState, object : SpeedAlertEngine.AlertListener {
+                    override fun onOutcome(camera: SpeedCamera, evaded: Boolean, speedKmh: Double, limitKmh: Double) {
+                        if (evaded) {
+                            stats.recordEvaded()
+                            CarDriveState.cameraEvaded()
+                        }
+                    }
+
+                    override fun onWarning(camera: SpeedCamera, currentSpeed: Double, distanceMeters: Double) {
+                        handleWarning(camera, distanceMeters)
+                    }
+                })
+            }
+        }
+    }
+
+    private fun stopTrackingAndSelf() {
+        serviceScope.cancel()
+        speaker.release()
+        trackingStarted = false
+        DrivingSession.reset()
+        runCatching { ProcessLifecycleOwner.get().lifecycle.removeObserver(foregroundObserver) }
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    override fun onDestroy() {
+        serviceScope.cancel()
+        if (::speaker.isInitialized) speaker.release()
+        runCatching { ProcessLifecycleOwner.get().lifecycle.removeObserver(foregroundObserver) }
+        super.onDestroy()
     }
 
     private fun buildNotification(): Notification {

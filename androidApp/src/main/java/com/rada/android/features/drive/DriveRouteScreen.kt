@@ -7,28 +7,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.android.gms.location.LocationServices
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import com.rada.android.data.AlertPreferences
 import com.rada.android.data.TrialState
-import com.rada.android.data.FirestoreReportRepository
-import com.rada.android.data.StatsRepository
-import com.rada.android.tracking.AlertNotifications
-import com.rada.android.tracking.AlertSpeaker
 import com.rada.android.tracking.TrackingService
-import com.rada.shared.location.AndroidLocationProvider
 
 @Composable
 fun DriveRouteScreen(
@@ -72,31 +62,15 @@ private fun ActiveDriveRoute(
     onSettings: () -> Unit
 ) {
     val context = LocalContext.current
-    val viewModel: DriveViewModel = viewModel {
-        DriveViewModel(
-            AndroidLocationProvider(LocationServices.getFusedLocationProviderClient(context)),
-            FirestoreReportRepository(),
-            AlertPreferences(context),
-            AlertNotifications(context.applicationContext),
-            AlertSpeaker(context),
-            StatsRepository()
-        )
-    }
+    val viewModel: DriveViewModel = viewModel { DriveViewModel() }
     val state by viewModel.state.collectAsState()
 
-    LaunchedEffect(isPro) { viewModel.onIntent(DriveIntent.ProChanged(isPro)) }
-
-    LaunchedEffect(hasLocationPermission) {
-        if (hasLocationPermission) viewModel.onIntent(DriveIntent.StartTracking)
-    }
-
-    // Deliberately NOT stopped when this screen leaves composition (switching tabs, or the
-    // whole app going to the background while the driver checks WhatsApp). A paying driver
-    // expects Drive to keep watching and warning until they explicitly end it — either from the
-    // persistent notification's Stop action, or by signing out. Stopping it just because this
-    // composable was disposed was the actual bug: it killed the foreground-service notification,
-    // and Android then treats the app as fully backgrounded and throttles/denies its location
-    // updates, silencing alerts exactly when the driver has switched away to another app.
+    // TrackingService is the actual engine now (see its class doc) — this just makes sure it's
+    // running. Deliberately NOT stopped when this screen leaves composition (switching tabs, or
+    // the whole app going to the background while the driver checks WhatsApp): a paying driver
+    // expects Drive to keep watching until they explicitly end it, from the notification's Stop
+    // action or by signing out. The service resolves its own access/preferences/foreground
+    // state independently, so nothing here needs to feed it anything beyond starting it.
     val appContext = context.applicationContext
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) TrackingService.start(appContext)
@@ -115,19 +89,6 @@ private fun ActiveDriveRoute(
     DisposableEffect(view) {
         view.keepScreenOn = true
         onDispose { view.keepScreenOn = false }
-    }
-
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_START -> viewModel.onIntent(DriveIntent.AppResumed)
-                Lifecycle.Event.ON_STOP -> viewModel.onIntent(DriveIntent.AppPaused)
-                else -> Unit
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     DriveContentScreen(
