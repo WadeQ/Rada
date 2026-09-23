@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     kotlin("android")
@@ -5,6 +8,23 @@ plugins {
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
 }
+
+// Release signing reads from local.properties (git-ignored) so the real keystore path and
+// passwords never touch source control or chat. Generate your own upload keystore with:
+//   keytool -genkey -v -keystore rada-upload.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias rada
+// then add these four lines to local.properties (values are yours, not shared here):
+//   RADA_RELEASE_STORE_FILE=/absolute/path/to/rada-upload.keystore
+//   RADA_RELEASE_STORE_PASSWORD=...
+//   RADA_RELEASE_KEY_ALIAS=rada
+//   RADA_RELEASE_KEY_PASSWORD=...
+// Until they're set, `assembleRelease` still builds — just unsigned, exactly like `assembleDebug`
+// does today. Environment variables of the same names work too, for CI later.
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) load(FileInputStream(file))
+}
+fun releaseSigningProperty(key: String): String? = localProperties.getProperty(key) ?: System.getenv(key)
+val releaseStoreFile = releaseSigningProperty("RADA_RELEASE_STORE_FILE")
 
 kotlin {
     jvmToolchain(17)
@@ -20,6 +40,30 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+    }
+
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = releaseSigningProperty("RADA_RELEASE_STORE_PASSWORD")
+                keyAlias = releaseSigningProperty("RADA_RELEASE_KEY_ALIAS")
+                keyPassword = releaseSigningProperty("RADA_RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // Minification is off for now: it needs a real signed build to test against R8's
+            // effect on Firebase/Billing/Compose before it's safe to turn on. Do that once you
+            // can sideload and run a release build, then flip this on and retest.
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (releaseStoreFile != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+        }
     }
 
     buildFeatures {

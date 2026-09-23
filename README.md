@@ -164,6 +164,34 @@ A Play purchase is bound to the account that bought it (an obfuscated account id
 server-side), and only Cloud Functions can write `proUntil` — never the client. Details are in
 [`functions/README.md`](functions/README.md).
 
+## 📦 Release build
+
+`androidApp/build.gradle.kts` now has a real release signing config, needed before Play Billing
+can be tested at all — Play Console requires an internal testing upload, which must be signed.
+
+1. Generate your own upload keystore (do this once, and back it up somewhere durable — losing
+   it means losing the ability to update the app, short of Play's key-upgrade process):
+   ```
+   keytool -genkey -v -keystore rada-upload.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias rada
+   ```
+2. Add four lines to `local.properties` (git-ignored; never commit these):
+   ```
+   RADA_RELEASE_STORE_FILE=/absolute/path/to/rada-upload.keystore
+   RADA_RELEASE_STORE_PASSWORD=...
+   RADA_RELEASE_KEY_ALIAS=rada
+   RADA_RELEASE_KEY_PASSWORD=...
+   ```
+3. Build the App Bundle Play Console needs:
+   ```
+   ./gradlew :androidApp:bundleRelease
+   ```
+   `androidApp/build/outputs/bundle/release/androidApp-release.aab` is what you upload.
+
+Without those `local.properties` values, `bundleRelease`/`assembleRelease` still build — just
+unsigned, which Play Console will reject. Minification (R8) is deliberately off for now; turn it
+on only once you can sideload and test a real release build, since it can break reflection-based
+libraries (Firebase, Billing, Compose) in ways only a real run catches.
+
 ## 🛡️ Payment policy: why only Google Play
 
 Rada Pro is a digital subscription consumed inside the app, which puts it squarely under
