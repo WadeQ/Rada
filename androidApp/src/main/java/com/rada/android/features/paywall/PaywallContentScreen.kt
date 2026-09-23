@@ -85,7 +85,7 @@ fun PaywallContentScreen(
 
         Spacer(Modifier.height(12.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            listOf("Crowd checkpoints", "Longer warnings", "Alert history").forEach { feature ->
+            listOf("Full Drive access", "Checkpoint alerts", "Alcohol check alerts").forEach { feature ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.Check, contentDescription = null, tint = RadaColors.Accent, modifier = Modifier.size(13.dp))
                     Spacer(Modifier.width(4.dp))
