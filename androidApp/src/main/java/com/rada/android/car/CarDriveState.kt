@@ -5,14 +5,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 
-/**
- * Live driving state shared between the phone's Drive screen and the Android Auto car screen.
- * The phone side (DriveViewModel) is the only writer; the car screen only reads. It's a
- * process-wide singleton rather than IPC because RadaCarAppService runs in this same app
- * process (no android:process override), and it only ever needs to reflect "what's happening
- * on this phone, right now" — it is not persisted and resets on process death, same as the
- * phone's own Drive screen state.
- */
 object CarDriveState {
 
     data class CarAlert(

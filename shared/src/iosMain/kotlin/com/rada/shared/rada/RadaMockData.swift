@@ -1,9 +1,5 @@
 package com.rada.shared.rada
 
-/// Mirrors shared/src/commonMain/.../MockData.kt by value. In a fully wired build these
-/// would instead come from `import Shared` and read the Kotlin MockData object directly —
-/// duplicated here so this iOS target is self-contained and readable without requiring the
-/// built XCFramework. Replace both copies with a real repository before shipping.
 enum RadaMockData {
 
     struct RecentAlert { let place: String; let whenLabel: String; let type: ReportKind }

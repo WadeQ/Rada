@@ -65,12 +65,6 @@ private fun ActiveDriveRoute(
     val viewModel: DriveViewModel = viewModel { DriveViewModel() }
     val state by viewModel.state.collectAsState()
 
-    // TrackingService is the actual engine now (see its class doc) — this just makes sure it's
-    // running. Deliberately NOT stopped when this screen leaves composition (switching tabs, or
-    // the whole app going to the background while the driver checks WhatsApp): a paying driver
-    // expects Drive to keep watching until they explicitly end it, from the notification's Stop
-    // action or by signing out. The service resolves its own access/preferences/foreground
-    // state independently, so nothing here needs to feed it anything beyond starting it.
     val appContext = context.applicationContext
     LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) TrackingService.start(appContext)

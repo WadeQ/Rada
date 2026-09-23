@@ -6,7 +6,6 @@ function isOurs(sub) {
   return (sub.lineItems || []).some((item) => item.productId in PLAY_PRODUCTS);
 }
 
-// Records a verified Play subscription and refreshes the account's entitlement.
 async function applyPlaySubscription(db, FieldValue, { uid, purchaseToken, sub }) {
   const expiry = playExpiryMillis(sub);
   const purchaseRef = db.collection("playPurchases").doc(purchaseToken);
@@ -34,7 +33,6 @@ async function applyPlaySubscription(db, FieldValue, { uid, purchaseToken, sub }
   });
 }
 
-// Google Play Developer API access, using the function's own service account.
 function playClient() {
   const { androidpublisher } = require("@googleapis/androidpublisher");
   const { GoogleAuth } = require("google-auth-library");

@@ -40,16 +40,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/**
- * Owns the entire Drive engine: location, the alert engine, speech, notifications, stats and
- * the shared session state both the phone UI and the Android Auto screen read from. This used
- * to live in DriveViewModel, tied to the Drive Compose screen's lifecycle — which meant a full
- * app-process death (an aggressive OEM battery manager, memory pressure on a long drive) took
- * the whole engine down with it even though this service, sticky, would try to restart itself:
- * restarting the notification alone did nothing if nothing was left to actually track. Moving
- * the engine here makes the service self-sufficient — a restart resumes real tracking, not just
- * the notification.
- */
 private const val ACTIVE_REPORT_MAX_AGE_MINUTES = 60L
 private const val LOCATION_STALL_WARNING_MS = 20_000L
 private const val STALE_AFTER_MS = 6_000L
@@ -91,8 +81,7 @@ class TrackingService : Service() {
         speaker = AlertSpeaker(this)
         notifications = AlertNotifications(applicationContext)
         stats = StatsRepository()
-        // Whether the app's UI is visible anywhere, not tied to which tab — replaces an older
-        // per-composable lifecycle observer that only knew about the Drive tab specifically.
+
         ProcessLifecycleOwner.get().lifecycle.addObserver(foregroundObserver)
     }
 
@@ -107,9 +96,7 @@ class TrackingService : Service() {
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else 0
         ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), type)
         startTracking()
-        // Sticky, and now meaningfully so: a restart (intent == null) re-enters startTracking(),
-        // which needs nothing from the dead process — it resolves access, prefs and live reports
-        // fresh, and re-acquires GPS. See the class doc for why that distinction matters.
+
         return START_STICKY
     }
 

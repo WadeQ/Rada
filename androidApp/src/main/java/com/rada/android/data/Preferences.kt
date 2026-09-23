@@ -125,7 +125,6 @@ class ReportHistoryPreferences(private val context: Context) {
         raw?.split(",")?.mapNotNull { it.toLongOrNull() } ?: emptyList()
 }
 
-
 sealed interface TrialState {
     data object Loading : TrialState
     data object NotStarted : TrialState
@@ -176,7 +175,6 @@ class TrialPreferences(private val context: Context) {
         private const val DAY_MS = 24L * 60 * 60 * 1000
     }
 }
-
 
 class BatteryPromptPreferences(private val context: Context) {
     private val key = booleanPreferencesKey("battery_prompt_shown")

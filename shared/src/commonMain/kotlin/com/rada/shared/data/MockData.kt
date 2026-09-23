@@ -59,7 +59,6 @@ object MockData {
         WeeklyBar("S", 5, false)
     )
 
-
     data class Contact(
         val name: String,
         val meta: String,

@@ -21,13 +21,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.Locale
 
-/**
- * A UI-less activity that submits a report from a launcher app-shortcut (long-press the app
- * icon) or, once App Actions is configured in Play Console, a voice command ("Hey Google,
- * report a camera on Rada"). It never shows a screen: it submits, speaks a short confirmation,
- * and finishes. If the driver isn't signed in or hasn't granted location, it falls back to
- * opening the app instead of guessing.
- */
 class QuickReportActivity : ComponentActivity() {
 
     private val activity: ComponentActivity get() = this
@@ -98,7 +91,7 @@ class QuickReportActivity : ComponentActivity() {
         ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
     override fun onDestroy() {
-        // Give the TTS a moment to finish speaking before the engine is torn down.
+
         tts?.let { engine -> android.os.Handler(mainLooper).postDelayed({ engine.shutdown() }, TTS_SHUTDOWN_DELAY_MS) }
         super.onDestroy()
     }

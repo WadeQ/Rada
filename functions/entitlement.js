@@ -7,12 +7,10 @@ const ACCESS_STATES = new Set([
   "SUBSCRIPTION_STATE_IN_GRACE_PERIOD",
 ]);
 
-// The obfuscated account id the app attaches to a purchase: it ties a Play purchase to one account.
 function accountHash(uid) {
   return crypto.createHash("sha256").update(uid).digest("hex").slice(0, 32);
 }
 
-// Expiry (ms) that a Play subscription resource grants, or 0 when it grants no access right now.
 function playExpiryMillis(sub) {
   if (!sub || !ACCESS_STATES.has(sub.subscriptionState)) return 0;
   const times = (sub.lineItems || [])
