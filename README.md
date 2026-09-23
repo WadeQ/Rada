@@ -12,7 +12,7 @@
   <img alt="Android" src="https://img.shields.io/badge/Android-Jetpack%20Compose-CCFF00?style=for-the-badge&logo=android&logoColor=12161B&labelColor=12161B">
   <img alt="Kotlin Multiplatform" src="https://img.shields.io/badge/Kotlin-Multiplatform-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white&labelColor=12161B">
   <img alt="Firebase" src="https://img.shields.io/badge/Firebase-Auth%20%C2%B7%20Firestore%20%C2%B7%20Functions-FFCA28?style=for-the-badge&logo=firebase&logoColor=white&labelColor=12161B">
-  <img alt="M-Pesa" src="https://img.shields.io/badge/M--Pesa-Daraja%20STK%20Push-4CAF50?style=for-the-badge&labelColor=12161B">
+  <img alt="Google Play Billing" src="https://img.shields.io/badge/Payments-Google%20Play%20Billing-00C853?style=for-the-badge&logo=googleplay&logoColor=white&labelColor=12161B">
   <img alt="Private" src="https://img.shields.io/badge/repo-private-9A2C50?style=for-the-badge&labelColor=12161B">
 </p>
 
@@ -64,7 +64,7 @@ eye. 👁️
     <td align="center"><img src="docs/screenshots/12-settings.png" width="190"><br><sub>Settings</sub></td>
   </tr>
   <tr>
-    <td align="center" colspan="3"><img src="docs/screenshots/13-paywall.png" width="190"><br><sub>Go Pro: pay by card through Google Play, or M-Pesa</sub></td>
+    <td align="center" colspan="3"><img src="docs/screenshots/13-paywall.png" width="190"><br><sub>Go Pro: pay by card through Google Play</sub></td>
   </tr>
 </table>
 
@@ -83,7 +83,7 @@ eye. 👁️
 | 🆘 | **Roadside help** | Emergency numbers, tow companies and mechanics, one tap to call. |
 | 🎛️ | **Settings** | Your name (from your account) and profile photo (tap the camera to change or remove it), alert switch, an **Alert settings** sheet (warning distance and a **Test alert sound** button), a dark-mode switch and Log out. Everything saves as you change it; there is no Save button. |
 | 🌗 | **Light and dark themes** | A lime-on-ink identity with burgundy accents, and an adaptive launcher icon (with a themed variant on Android 13+). |
-| 👑 | **Rada Pro** | Try Drive **free for 7 days**, then unlock it with a Google Play subscription or a one-time M-Pesa payment. See [Pricing and payments](#-pricing-and-payments). |
+| 👑 | **Rada Pro** | Try Drive **free for 7 days**, then unlock it with a Google Play subscription. See [Pricing and payments](#-pricing-and-payments). |
 
 ## 🚦 How an alert happens
 
@@ -135,48 +135,48 @@ flowchart LR
 | 📅 **Monthly** | KES 200 for 30 days | Keep Drive after the trial, plus alcohol-check alerts |
 | 🏆 **Annual** | KES 1,800 for 365 days | Everything in Monthly, about KES 150 a month |
 
-Two ways to pay, side by side on the paywall, so everyone can use what they already have:
+One payment route: a **Google Play subscription**, paid by Visa, Mastercard (including
+**M-PESA GlobalPay** virtual cards) or M-Pesa where Google offers it at checkout. It auto-renews
+and is cancelled any time in Google Play.
 
-| | 🟢 **Google Play subscription** | 💚 **M-Pesa, pay once** |
-|---|---|---|
-| Best for | Hands-off, automatic renewal | Paying straight from your M-Pesa balance |
-| Pay with | Visa or Mastercard (including **M-PESA GlobalPay** virtual cards), or M-Pesa through Google Play | M-Pesa STK push |
-| Renewal | **Automatic**, cancel any time in Google Play | Manual: pay again when you like |
-| Built on | Google Play Billing | Safaricom Daraja |
-
-Both routes write the same entitlement, `proUntil` on the account: the later of the two expiries
-wins, so switching or combining never loses paid time.
+> [!NOTE]
+> An earlier version also offered M-Pesa STK push (Safaricom Daraja) as a direct, pay-once
+> route. It was removed after the production Till application was rejected. Google Play Billing
+> is the only in-app purchase route now — see [Payment policy](#-payment-policy-why-only-google-play) for why we're not adding
+> PayPal or another direct gateway alongside it.
 
 ```mermaid
 sequenceDiagram
     participant App as 📱 Rada app
     participant F as ☁️ Cloud Functions
     participant P as 🟢 Google Play
-    participant D as 💚 Daraja / M-Pesa
     participant DB as 🔥 Firestore
-    rect rgb(40, 60, 40)
-    Note over App,DB: Google Play subscription
-    App->>P: subscribe (card, GlobalPay or M-Pesa)
+    App->>P: subscribe (card or GlobalPay)
     App->>F: verifyPlaySubscription(purchase token)
     F->>P: check the purchase
     P-->>F: state and expiry
     F->>DB: playProUntil, then proUntil
     P->>F: renewal / cancel / refund notifications
-    end
-    rect rgb(30, 55, 45)
-    Note over App,DB: M-Pesa, pay once
-    App->>F: initiateMpesaPayment(phone, plan)
-    F->>D: STK push (price set server-side)
-    D->>F: callback (secret token)
-    F->>DB: verify amount, mpesaProUntil, then proUntil
-    end
     DB-->>App: proUntil changes, Pro unlocks
 ```
 
-The app never sees Daraja credentials. Prices for M-Pesa live on the server, callbacks are
-authenticated with a secret token and processed exactly once, a Play purchase is bound to the
-account that bought it, and only Cloud Functions can write entitlements. Details are in
+A Play purchase is bound to the account that bought it (an obfuscated account id, checked
+server-side), and only Cloud Functions can write `proUntil` — never the client. Details are in
 [`functions/README.md`](functions/README.md).
+
+## 🛡️ Payment policy: why only Google Play
+
+Rada Pro is a digital subscription consumed inside the app, which puts it squarely under
+**Google Play's Payments policy**: real-money purchases of digital content must go through
+Google Play Billing, with narrow exceptions (physical goods/services, or an approved
+alternative-billing program in specific countries — unconfirmed for Kenya). Adding a direct
+gateway like PayPal *alongside* Play Billing for the same digital subscription is exactly what
+that policy exists to prevent, and risks the listing itself, not just a feature. "Other apps on
+the Play Store take PayPal" is almost always apps selling physical goods or off-app services
+(ride-hailing, food delivery), which are exempt for a different reason than ours would be.
+
+M-Pesa GlobalPay and any other Visa/Mastercard-branded card already works today — through Google
+Play Billing, which is card-agnostic. That's covered without a second integration.
 
 ## 🔐 Accounts and security
 
@@ -184,10 +184,16 @@ account that bought it, and only Cloud Functions can write entitlements. Details
 - ⏳ **The free trial can't be reset.** The start date is stored on the account in Firestore with a
   server timestamp, so clearing app data or reinstalling doesn't restart it.
 - 🛡️ **Firestore rules** ([`firestore.rules`](firestore.rules)): reports need a signed-in user and
-  can only be deleted by their author; payments are readable only by their owner; no client can
-  grant itself Pro or edit its trial.
-- ✅ **Tested against the emulators:** `npm run test:e2e` in `functions/` replays Safaricom-style
-  callbacks and checks the rules on a real Firestore emulator.
+  can only be deleted by their author; Play purchase records are Cloud-Functions-only, not
+  readable or writable by any client; no client can grant itself Pro or edit its trial.
+- ✅ **Tested against the emulators:** `npm run test:e2e` in `functions/` checks the rules on a
+  real Firestore emulator.
+- 🔒 **Minimal permissions on purpose.** No `ACCESS_BACKGROUND_LOCATION` — Rada only ever accesses
+  location from a running foreground service, which Android already permits on "while in use"
+  permission alone, so the extra permission (and Play's background-location review step) buys
+  nothing. No `CALL_PHONE` — Roadside help opens the dialer with `ACTION_DIAL`, which needs no
+  permission at all. No `android:allowBackup` — auth and account data never leaves the device
+  through a backup.
 
 <details>
 <summary><b>How usernames work, and console notes</b></summary>
@@ -239,10 +245,10 @@ androidApp/      Jetpack Compose app
   └ data/        Firestore repositories, DataStore preferences, auth and trial sync
   └ tracking/    foreground service, alert notifications, AlertSpeaker (chime + voice)
   └ theme/       palette + light/dark colour schemes
-functions/       Cloud Functions (Node 24): M-Pesa STK push, callback, status query, tests
+functions/       Cloud Functions (Node 24): Google Play subscription verification, notifications, tests
 iosApp/          SwiftUI app (see iosApp/SETUP.md)
 docs/            screenshots, brand assets, camera data notes
-firestore.rules  Security rules for reports, payments and accounts
+firestore.rules  Security rules for reports, Play purchases and accounts
 ```
 
 ## 🚙 Hands-free and in-car
@@ -281,14 +287,13 @@ Legend: ✅ working · 🧪 tested, needs a live check · 🚧 in progress · �
 | ✅ | Username and password sign-in, persistent sessions | Working end to end |
 | ✅ | Free trial tied to the account | Verified: wiping app data no longer restarts it |
 | ✅ | Firestore security rules | Published and covered by emulator tests |
-| 🧪 | M-Pesa payments | Verified against the Daraja sandbox and the emulator suite; **waiting on a production Till** for a live payment |
 | 🧪 | Google Play subscriptions | App, verification and notification handling built and unit-tested; **needs the Play Console setup** (products, API access) before a real purchase |
 | 🧪 | Google sign-in | Implemented; needs the SHA-1 registered, then a device check |
 | 🚧 | Apple sign-in | Implemented; needs Apple Developer setup |
 | 🚧 | iOS app | A SwiftUI prototype with mock data; no location, map or sign-in yet |
 | 🔜 | Password recovery | Collect a real email at sign-up |
 | 🔜 | Renewal reminders | A nudge a few days before Pro ends |
-| 🔜 | Offline maps | Promised on the paywall, not built yet |
+| 🔜 | Offline maps | Not built; not promised on the paywall either, since we don't ship it yet |
 | 🔜 | Remaining camera coordinates | See [`docs/cameras-todo.md`](docs/cameras-todo.md) |
 
 > [!IMPORTANT]
