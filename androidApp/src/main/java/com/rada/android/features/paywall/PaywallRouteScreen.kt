@@ -23,7 +23,7 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 fun PaywallRouteScreen(onTrialStarted: () -> Unit) {
     val context = LocalContext.current
     val viewModel: PaywallViewModel = viewModel {
-        PaywallViewModel(FirebaseAuthRepository(), MpesaPaymentRepository(), ProRepository(), PlayBillingRepository(context))
+        PaywallViewModel(FirebaseAuthRepository(), ProRepository(), PlayBillingRepository(context))
     }
     val state by viewModel.state.collectAsState()
 
