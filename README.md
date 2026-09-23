@@ -164,38 +164,6 @@ narrow exceptions (physical goods/services, or an approved alternative-billing p
 specific countries) that don't apply here. Google Play Billing is card-agnostic, so Visa,
 Mastercard and M-PESA GlobalPay are already covered through it without a second integration.
 
-## 📦 Release build
-
-Play Console requires a signed build before Play Billing can be tested — an internal testing
-upload has to be signed.
-
-1. Generate your own upload keystore (do this once, and back it up somewhere durable — losing
-   it means losing the ability to update the app, short of Play's key-upgrade process):
-   ```
-   keytool -genkey -v -keystore rada-upload.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias rada
-   ```
-2. Add four lines to `local.properties` (git-ignored; never commit these):
-   ```
-   RADA_RELEASE_STORE_FILE=/absolute/path/to/rada-upload.keystore
-   RADA_RELEASE_STORE_PASSWORD=...
-   RADA_RELEASE_KEY_ALIAS=rada
-   RADA_RELEASE_KEY_PASSWORD=...
-   ```
-3. Build the App Bundle Play Console needs:
-   ```
-   ./gradlew :androidApp:bundleRelease
-   ```
-   `androidApp/build/outputs/bundle/release/androidApp-release.aab` is what you upload.
-
-Without those `local.properties` values, `bundleRelease`/`assembleRelease` still build — just
-unsigned, which Play Console will reject.
-
-Release builds run with code obfuscation (R8) on; debug builds never minify. Keep rules live in
-`androidApp/proguard-rules.pro` — notably `ReportType`'s enum names (they round-trip through
-Firestore as strings) and `androidx.car.app` (the Android Auto integration). Resource shrinking
-(`isShrinkResources`) is off; `AuthRepository` looks up Google Sign-In's client ID by resource
-name at runtime, and `res/values/keep.xml` protects it for whenever that gets turned on.
-
 ## 🔐 Accounts and security
 
 - 👤 **Username and password**, or **Google** or **Apple**. Sign in once and stay signed in.
