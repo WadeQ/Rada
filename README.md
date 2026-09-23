@@ -188,9 +188,22 @@ can be tested at all — Play Console requires an internal testing upload, which
    `androidApp/build/outputs/bundle/release/androidApp-release.aab` is what you upload.
 
 Without those `local.properties` values, `bundleRelease`/`assembleRelease` still build — just
-unsigned, which Play Console will reject. Minification (R8) is deliberately off for now; turn it
-on only once you can sideload and test a real release build, since it can break reflection-based
-libraries (Firebase, Billing, Compose) in ways only a real run catches.
+unsigned, which Play Console will reject.
+
+**Code obfuscation (R8) is on for release builds, debug is never touched.** Traced the actual
+codebase before writing rules rather than pasting a generic template: no Firestore
+`toObject()`/reflection mapping, no Gson/Moshi, no Parcelable models — most of the usual
+obfuscation breakage doesn't apply here. Two things needed explicit handling: `ReportType`
+round-trips through Firestore as a string, so its `values()`/`valueOf()` are kept; and
+`androidx.car.app` (Android Auto) is kept wholesale, being newer and less proven than the rest
+of the stack. See `androidApp/proguard-rules.pro`. Verified: `assembleRelease`/`bundleRelease`
+build clean with R8 on, no missing-class warnings, real shrinkage (release AAB dropped from
+17.4 MB to 8.1 MB). **Not verified:** runtime correctness — that needs an actual install and a
+full pass through sign-in, Drive, reporting and payment on a real device.
+
+**Resource shrinking (`isShrinkResources`) is deliberately still off.** `AuthRepository` looks up
+Google Sign-In's client ID by name at runtime, which static analysis can't see; `res/values/keep.xml`
+protects it for whenever this gets turned on, but that path is untested, so the toggle stays off.
 
 ## 🛡️ Payment policy: why only Google Play
 
