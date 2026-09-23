@@ -1,4 +1,4 @@
-const { playExpiryMillis, currentExpiries, combinedProUntil, PLAY_PRODUCTS } = require("./entitlement");
+const { playExpiryMillis, PLAY_PRODUCTS } = require("./entitlement");
 
 const PACKAGE_NAME = "com.rada.android";
 
@@ -12,7 +12,7 @@ async function applyPlaySubscription(db, FieldValue, { uid, purchaseToken, sub }
   const purchaseRef = db.collection("playPurchases").doc(purchaseToken);
   const userRef = db.collection("users").doc(uid);
   return db.runTransaction(async (tx) => {
-    const [purchaseSnap, userSnap] = await Promise.all([tx.get(purchaseRef), tx.get(userRef)]);
+    const purchaseSnap = await tx.get(purchaseRef);
     if (purchaseSnap.exists && purchaseSnap.data().uid !== uid) return { applied: false, reason: "owned-by-another-account" };
 
     const item = (sub.lineItems || []).find((i) => i.productId in PLAY_PRODUCTS) || {};
@@ -25,10 +25,9 @@ async function applyPlaySubscription(db, FieldValue, { uid, purchaseToken, sub }
       updatedAt: FieldValue.serverTimestamp(),
     });
 
-    const current = currentExpiries(userSnap.exists ? userSnap.data() : {});
-    const proUntil = combinedProUntil({ mpesa: current.mpesa, play: expiry });
+    const proUntil = expiry ? new Date(expiry) : null;
     tx.set(userRef, {
-      playProUntil: expiry ? new Date(expiry) : FieldValue.delete(),
+      playProUntil: proUntil || FieldValue.delete(),
       proUntil: proUntil || FieldValue.delete(),
     }, { merge: true });
     return { applied: true, active: expiry > Date.now(), proUntil };

@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "node --test test/*.test.js",
-    "test:e2e": "firebase emulators:exec --only functions,firestore --project rada-app-78472 \"node test/emulator/e2e.js && node test/emulator/rules.js\""
+    "test:e2e": "firebase emulators:exec --only functions,firestore --project rada-app-78472 \"node test/emulator/rules.js\""
   },
   "dependencies": {
     "firebase-admin": "^14.4.0",

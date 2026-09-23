@@ -10,10 +10,10 @@ const { doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp } = require("
   });
   await env.withSecurityRulesDisabled(async (ctx) => {
     const db = ctx.firestore();
-    await setDoc(doc(db, "payments/p_alice"), { uid: "alice", status: "pending" });
     await setDoc(doc(db, "users/alice"), { trialStartedAt: new Date() });
     await setDoc(doc(db, "reports/r_alice"), { uid: "alice", type: "CAMERA" });
     await setDoc(doc(db, "reports/r_old"), { type: "CAMERA" });
+    await setDoc(doc(db, "playPurchases/tok_alice"), { uid: "alice" });
   });
   const alice = env.authenticatedContext("alice").firestore();
   const bob = env.authenticatedContext("bob").firestore();
@@ -27,11 +27,10 @@ const { doc, setDoc, getDoc, updateDoc, deleteDoc, serverTimestamp } = require("
   await assertSucceeds(getDoc(doc(alice, "users/alice")));
   console.log("ok  users: no client can grant Pro or edit the trial; reads are private");
 
-  await assertSucceeds(getDoc(doc(alice, "payments/p_alice")));
-  await assertFails(getDoc(doc(bob, "payments/p_alice")));
-  await assertFails(setDoc(doc(alice, "payments/p_new"), { uid: "alice", status: "success" }));
-  await assertFails(updateDoc(doc(alice, "payments/p_alice"), { status: "success" }));
-  console.log("ok  payments: owner read only, no client writes");
+  await assertFails(getDoc(doc(alice, "playPurchases/tok_alice")));
+  await assertFails(setDoc(doc(alice, "playPurchases/tok_new"), { uid: "alice" }));
+  await assertFails(updateDoc(doc(alice, "playPurchases/tok_alice"), { uid: "alice" }));
+  console.log("ok  playPurchases: no client access at all, not even the owner");
 
   const good = { uid: "alice", type: "CAMERA", latitude: -1.3, longitude: 36.8, timestamp: serverTimestamp() };
   await assertSucceeds(setDoc(doc(alice, "reports/r_new"), good));

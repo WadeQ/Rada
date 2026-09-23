@@ -34,13 +34,11 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Google Play is the only payment route now (M-Pesa STK push was removed after the Till
+    // application was rejected). Only Cloud Functions write here, via the Admin SDK, which
+    // rules don't govern — no client, including the app itself, ever writes to this collection.
     match /playPurchases/{token} {
       allow read, write: if false;
-    }
-
-    match /payments/{paymentId} {
-      allow read: if request.auth != null && resource.data.uid == request.auth.uid;
-      allow write: if false;
     }
   }
 }

@@ -22,20 +22,4 @@ function playExpiryMillis(sub) {
   return times.length ? Math.max(...times) : 0;
 }
 
-const millis = (ts) => (ts && typeof ts.toMillis === "function" ? ts.toMillis() : 0);
-
-// Each payment route keeps its own expiry; proUntil is whichever ends later.
-// Accounts that only have a legacy proUntil are treated as M-Pesa time.
-function currentExpiries(user) {
-  const data = user || {};
-  const play = millis(data.playProUntil);
-  const legacy = data.mpesaProUntil === undefined && data.playProUntil === undefined ? millis(data.proUntil) : 0;
-  return { mpesa: millis(data.mpesaProUntil) || legacy, play };
-}
-
-function combinedProUntil({ mpesa, play }) {
-  const latest = Math.max(mpesa, play);
-  return latest > 0 ? new Date(latest) : null;
-}
-
-module.exports = { PLAY_PRODUCTS, accountHash, playExpiryMillis, currentExpiries, combinedProUntil };
+module.exports = { PLAY_PRODUCTS, accountHash, playExpiryMillis };
