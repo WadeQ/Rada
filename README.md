@@ -111,7 +111,15 @@ flowchart LR
   estimated fine is added to your month. If you didn't slow down, only the warning is counted.
 - **Fast lookups.** `CameraGridIndex` buckets cameras into ~1 km cells so each location update
   only checks the cameras around you.
-- **Survives the background.** A foreground location service keeps tracking while you use Maps or
+- **Survives the background.** Fixed a real bug: the app used to stop its own tracking service
+  the instant you left the Drive tab, which killed the foreground-service notification and left
+  Android free to throttle location delivery — exactly the moment a driver checks WhatsApp.
+  Tracking now keeps running across tabs and other apps until you stop it (the notification's
+  Stop action, or signing out); the service also asks Android to restart it if the OS is forced
+  to kill it. **Confirmed:** GPS fixes keep arriving with Drive off-screen and another app
+  fully in the foreground, on the emulator. **Not yet confirmed:** behaviour after the *whole
+  app process* is killed by an aggressive OEM battery manager on a real phone (see the battery
+  prompt below) — this needs a real, long drive to verify.
   music, and a watchdog restarts location if GPS updates stall.
 
 > [!NOTE]

@@ -17,6 +17,7 @@ import com.rada.android.data.ProfilePhotoStore
 import com.rada.android.data.ThemePreferences
 import com.rada.android.data.UserProfilePreferences
 import com.rada.android.tracking.AlertSpeaker
+import com.rada.android.tracking.TrackingService
 import com.rada.shared.domain.ReportType
 
 @Composable
@@ -44,7 +45,10 @@ fun SettingsRouteScreen(
     LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                is SettingsEffect.NavigateToLogin -> onSignedOut()
+                is SettingsEffect.NavigateToLogin -> {
+                    TrackingService.stop(context.applicationContext)
+                    onSignedOut()
+                }
             }
         }
     }

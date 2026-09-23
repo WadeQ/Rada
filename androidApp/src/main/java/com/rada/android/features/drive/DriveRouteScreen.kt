@@ -7,11 +7,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.core.content.ContextCompat
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -90,10 +90,16 @@ private fun ActiveDriveRoute(
         if (hasLocationPermission) viewModel.onIntent(DriveIntent.StartTracking)
     }
 
+    // Deliberately NOT stopped when this screen leaves composition (switching tabs, or the
+    // whole app going to the background while the driver checks WhatsApp). A paying driver
+    // expects Drive to keep watching and warning until they explicitly end it — either from the
+    // persistent notification's Stop action, or by signing out. Stopping it just because this
+    // composable was disposed was the actual bug: it killed the foreground-service notification,
+    // and Android then treats the app as fully backgrounded and throttles/denies its location
+    // updates, silencing alerts exactly when the driver has switched away to another app.
     val appContext = context.applicationContext
-    DisposableEffect(hasLocationPermission) {
+    LaunchedEffect(hasLocationPermission) {
         if (hasLocationPermission) TrackingService.start(appContext)
-        onDispose { TrackingService.stop(appContext) }
     }
 
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }

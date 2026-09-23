@@ -27,7 +27,11 @@ class TrackingService : Service() {
         ensureChannel(this)
         val type = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else 0
         ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), type)
-        return START_NOT_STICKY
+        // Sticky: if Android is forced to kill this process under memory pressure while a drive
+        // is active, it retries starting the service (with a null intent) so tracking resumes
+        // instead of silently staying off. The Drive screen's own watchdog and this service's
+        // notification are the only "was I tracking" signal we need to pick back up.
+        return START_STICKY
     }
 
     private fun buildNotification(): Notification {
