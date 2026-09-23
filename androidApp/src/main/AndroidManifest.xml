@@ -1,15 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-feature
-        android:name="android.hardware.telephony"
-        android:required="false" />
+    <!-- Fine/coarse location: requested at runtime, in-app, with an explanation, before use.
+         No ACCESS_BACKGROUND_LOCATION: Rada never needs it. Android grants a running foreground
+         service of type "location" continued access once the app backgrounds, on
+         "while in use" permission alone — see developer.android.com/develop/sensors-and-location/location/permissions
+         ("Your app retains access when it's placed in the background... such as when the user
+         presses the Home button"). Declaring the background permission would only add Play's
+         extra background-location review step for no functional gain. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- No CALL_PHONE: Roadside help opens the dialer with Intent.ACTION_DIAL, which needs no
+         permission at all — the driver taps Call themselves. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
     <queries>
@@ -19,7 +23,7 @@
     </queries>
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:label="Rada"
