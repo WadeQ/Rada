@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rada Privacy Policy</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #12161b;
+    --ink-muted: #4b5563;
+    --bg: #fdfdfb;
+    --accent: #7a9c1f;
+    --line: #e4e2dc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eef0f2;
+      --ink-muted: #a3aab3;
+      --bg: #12161b;
+      --accent: #ccff00;
+      --line: #262b32;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 0 20px 64px;
+  }
+  main { max-width: 720px; margin: 0 auto; }
+  header { padding-top: 48px; padding-bottom: 8px; border-bottom: 1px solid var(--line); margin-bottom: 32px; }
+  h1 { font-size: 1.7rem; margin: 0 0 8px; }
+  h2 { font-size: 1.15rem; margin: 40px 0 12px; }
+  .asof { color: var(--ink-muted); font-size: 0.9rem; margin-bottom: 24px; }
+  p, li { color: var(--ink); }
+  ul { padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  a { color: var(--accent); }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-muted); font-weight: 600; }
+  strong { font-weight: 600; }
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Rada Privacy Policy</h1>
+    <div class="asof">Effective 24 September 2026</div>
+  </header>
+
+  <p>Rada ("the app") is a driving-awareness app for Kenyan drivers, developed and operated by
+  Derrick Wadek. This policy explains what information Rada collects, how it's used, and the
+  choices available to you. Rada is a personal, independently-developed app — not part of a
+  larger company or ad network.</p>
+
+  <h2>Information we collect</h2>
+  <p><strong>Account information.</strong> When you create an account, Rada collects a username
+  (or, if you sign in with Google or Apple, the name and email address those services share with
+  us) and a profile photo if one is available. Rada uses Firebase Authentication to manage
+  sign-in; a plain username is converted to an internal address that never receives mail, so Rada
+  does not require a real email address unless you choose Google or Apple sign-in.</p>
+  <p><strong>Location data.</strong> While you're on an active drive, Rada reads your device's
+  precise (GPS) location to compare it against known speed-camera locations and nearby community
+  reports, and to power the map and drive statistics shown in the app. Location is read only
+  while Rada is actively tracking a drive, through a foreground service with a visible ongoing
+  notification — never silently in the background.</p>
+  <p><strong>Community reports.</strong> If you report a camera, checkpoint or alcohol-check,
+  Rada stores the report's type, coordinates and timestamp, linked to your account.</p>
+  <p><strong>Drive and usage statistics.</strong> Rada keeps a monthly count of warnings you
+  received, alerts you avoided, and an estimated fines-avoided figure, tied to your account.</p>
+  <p><strong>Subscription status.</strong> If you subscribe to Rada Pro, Google Play shares a
+  purchase token and subscription status with Rada's backend so it can verify your entitlement.
+  Rada does not see or store your payment card details — those are handled entirely by Google
+  Play.</p>
+  <p><strong>Diagnostic data.</strong> Rada uses Firebase Crashlytics to collect crash reports
+  and basic device/OS information automatically when the app crashes, to help fix bugs.</p>
+
+  <h2>How location data is used</h2>
+  <p>Location is Rada's core feature: it's how the app knows when you're near a speed camera or
+  a recently reported checkpoint or alcohol-check, so it can warn you in time. Location is:</p>
+  <ul>
+    <li>Read only while a drive is actively being tracked, through a foreground service with a
+    persistent notification — you always know when it's running, and you can stop it at any
+    time.</li>
+    <li>Never collected in the background when you're not driving. Rada does not request
+    Android's "Allow all the time" background location permission.</li>
+    <li>Not sold, and not shared with advertisers. It's used only to power in-app alerts, your
+    drive statistics, and (if you choose to report something) the coordinates attached to that
+    report.</li>
+    <li>Not retained as a continuous location history. Rada does not store a trail of everywhere
+    you've driven — only the aggregate monthly counts described above, and, if you submit one,
+    the location of that specific report.</li>
+  </ul>
+
+  <h2>Third-party services</h2>
+  <p>Rada is built on a small number of third-party services, each of which processes data under
+  its own privacy policy:</p>
+  <table>
+    <tr><th>Service</th><th>What it's used for</th></tr>
+    <tr><td>Firebase Authentication (Google)</td><td>Sign-in (username/password, Google, or Apple)</td></tr>
+    <tr><td>Cloud Firestore (Google)</td><td>Stores account, report and drive-statistics data</td></tr>
+    <tr><td>Cloud Functions (Google)</td><td>Verifies Google Play purchases and updates subscription status</td></tr>
+    <tr><td>Firebase Crashlytics (Google)</td><td>Crash and basic diagnostic reporting</td></tr>
+    <tr><td>Google Play Billing</td><td>Processes Rada Pro subscription payments</td></tr>
+  </table>
+  <p>Google's privacy policy for these services is at
+  <a href="https://policies.google.com/privacy">policies.google.com/privacy</a>. Rada does not
+  integrate any advertising SDK and does not use any analytics service beyond Crashlytics.</p>
+
+  <h2>Data sharing and disclosure</h2>
+  <p>Rada does not sell your personal information, and does not share it with third parties for
+  their own advertising or marketing purposes. Information is shared only:</p>
+  <ul>
+    <li>With the service providers above (Firebase, Google Play Billing), strictly to operate
+    the app's core features.</li>
+    <li>With other Rada users, in an anonymous, aggregated form: a report you submit is shown to
+    nearby drivers as a pin on the map with its type, location and time — never with your name,
+    username or account identifier attached.</li>
+    <li>If required by law, to comply with a valid legal request.</li>
+  </ul>
+
+  <h2>Data retention and deletion</h2>
+  <p>Account data, reports and drive statistics are kept for as long as your account exists, so
+  Rada can keep working the way you'd expect (your trial or subscription status, your history of
+  avoided fines, and so on). If you'd like your account and its data deleted, email
+  <a href="mailto:derrickwadek@gmail.com">derrickwadek@gmail.com</a> from the address or account
+  you signed up with, and it will be deleted within 30 days. Crash reports collected by
+  Crashlytics are retained under Google's own Crashlytics retention policy.</p>
+
+  <h2>Security</h2>
+  <p>Rada's data is protected by Firestore security rules that restrict every account to its own
+  data: no one can read another account's reports, statistics or trial status, and no client —
+  including the app itself — can grant itself Pro access or edit its own trial. Purchase records
+  are written only by Rada's server-side Cloud Functions, never directly by the app. Rada also
+  does not request Android's auto-backup permission, so account data isn't copied off your
+  device through a system backup.</p>
+
+  <h2>Your choices and rights</h2>
+  <ul>
+    <li><strong>Location permission</strong> can be denied or revoked at any time in Android's
+    app settings; Rada simply won't be able to show live alerts without it.</li>
+    <li><strong>Deleting a report</strong> you submitted is available directly from the app, and
+    removes it immediately.</li>
+    <li><strong>Access, correction or deletion</strong> of your account data can be requested by
+    emailing <a href="mailto:derrickwadek@gmail.com">derrickwadek@gmail.com</a>.</li>
+    <li><strong>Managing your subscription</strong> (cancelling, viewing renewal dates,
+    requesting a refund) is done through Google Play's own subscription settings, since all
+    payments are processed by Google Play Billing.</li>
+  </ul>
+
+  <h2>Children's privacy</h2>
+  <p>Rada is intended for licensed drivers and is not directed at children. Rada does not
+  knowingly collect personal information from anyone under 18. If you believe a child has
+  provided Rada with personal information, contact
+  <a href="mailto:derrickwadek@gmail.com">derrickwadek@gmail.com</a> and it will be removed.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>This policy may be updated as Rada's features change. Material changes will be reflected by
+  a new date at the top of this page; continued use of the app after an update means you accept
+  the revised policy.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about this policy or your data can be sent to
+  <strong><a href="mailto:derrickwadek@gmail.com">derrickwadek@gmail.com</a></strong>.</p>
+
+  <footer>Rada &middot; kaa rada na ntsa</footer>
+</main>
+</body>
+</html>

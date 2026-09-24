@@ -20,3 +20,4 @@ androidApp/src/main/res/values/secrets.xml
 xcuserdata/
 DerivedData/
 *.xcuserstate
+.firebase/
