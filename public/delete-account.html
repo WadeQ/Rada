@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Delete your Rada account</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --ink: #12161b;
+    --ink-muted: #4b5563;
+    --bg: #fdfdfb;
+    --accent: #7a9c1f;
+    --line: #e4e2dc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #eef0f2;
+      --ink-muted: #a3aab3;
+      --bg: #12161b;
+      --accent: #ccff00;
+      --line: #262b32;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 0 20px 64px;
+  }
+  main { max-width: 680px; margin: 0 auto; }
+  header { padding-top: 48px; padding-bottom: 8px; border-bottom: 1px solid var(--line); margin-bottom: 32px; }
+  h1 { font-size: 1.6rem; margin: 0 0 8px; }
+  h2 { font-size: 1.05rem; margin: 36px 0 10px; }
+  .asof { color: var(--ink-muted); font-size: 0.9rem; margin-bottom: 24px; }
+  p, li { color: var(--ink); }
+  ul { padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  a { color: var(--accent); }
+  a.button {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #12161b;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  code { background: var(--line); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+  footer { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Delete your Rada account</h1>
+    <div class="asof">How to request deletion of your account and its data</div>
+  </header>
+
+  <p>You can ask to have your Rada account and the data tied to it permanently deleted at any
+  time. This is a manual request handled by the developer &mdash; Rada doesn't yet have a
+  self-serve delete button in the app.</p>
+
+  <h2>How to request deletion</h2>
+  <p>Send an email to <strong>derrickwadek@gmail.com</strong> with the subject
+  <code>Delete my Rada account</code>, from the account you'd like removed if you signed in with
+  Google or Apple, or including your Rada username if you signed in with a username and
+  password.</p>
+  <a class="button" href="mailto:derrickwadek@gmail.com?subject=Delete%20my%20Rada%20account&body=Please%20delete%20my%20Rada%20account%20and%20its%20data.%0A%0AMy%20Rada%20username%20(if%20applicable):%20%0AThe%20email%20I%20signed%20in%20with%20(if%20Google%2FApple):%20">Email to request deletion</a>
+
+  <h2>What gets deleted</h2>
+  <ul>
+    <li>Your account itself (sign-in record) and profile information (username or Google/Apple
+    name, photo).</li>
+    <li>Your trial and subscription status stored in Rada's database.</li>
+    <li>Your monthly drive statistics (warnings received, alerts avoided, estimated fines
+    avoided).</li>
+    <li>The camera, checkpoint and alcohol-check reports you submitted.</li>
+  </ul>
+  <p>Deletion is completed within <strong>30 days</strong> of the request.</p>
+
+  <h2>What isn't deleted by this request</h2>
+  <ul>
+    <li>If you subscribed to Rada Pro, Google Play retains its own records of the purchase (for
+    receipts, refunds and tax purposes) under Google's policies &mdash; those aren't controlled
+    by Rada and aren't affected by an account-deletion request. You can manage or cancel a
+    subscription any time from Google Play's own subscription settings.</li>
+    <li>Crash reports already sent to Firebase Crashlytics before your request may persist for a
+    short period under Google's own Crashlytics retention policy; they aren't linked to your
+    name or account.</li>
+  </ul>
+
+  <p>See the full <a href="/privacy">Privacy Policy</a> for more detail on what Rada collects and
+  how it's used.</p>
+
+  <footer>Rada &middot; kaa rada na ntsa</footer>
+</main>
+</body>
+</html>
