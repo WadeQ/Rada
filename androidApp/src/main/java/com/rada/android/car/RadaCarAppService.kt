@@ -11,8 +11,9 @@ class RadaCarAppService : CarAppService() {
         if (BuildConfig.DEBUG) {
             HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
         } else {
-
-            HostValidator.Builder(applicationContext).build()
+            HostValidator.Builder(applicationContext)
+                .addAllowedHosts(androidx.car.app.R.array.hosts_allowlist_sample)
+                .build()
         }
 
     override fun onCreateSession(): Session = RadaCarSession()
