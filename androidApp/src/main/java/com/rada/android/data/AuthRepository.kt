@@ -18,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuthWebException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.OAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.coroutines.tasks.await
 
 sealed interface SignInResult {
@@ -37,10 +38,12 @@ interface AuthRepository {
     suspend fun reloadUser()
     suspend fun updateDisplayName(name: String)
     fun signOut()
+    suspend fun deleteAccount(): Result<Unit>
 }
 
 class FirebaseAuthRepository(
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val functions: FirebaseFunctions = FirebaseFunctions.getInstance("europe-west1")
 ) : AuthRepository {
 
     override suspend fun signUpWithUsername(username: String, password: String): SignInResult {
@@ -154,6 +157,11 @@ class FirebaseAuthRepository(
     override fun signOut() {
         auth.signOut()
         TrialPreferences.resetSync()
+    }
+
+    override suspend fun deleteAccount(): Result<Unit> = runCatching {
+        functions.getHttpsCallable("deleteAccount").call().await()
+        signOut()
     }
 
     private fun usernameToEmail(username: String) = "${username.trim().lowercase()}@users.rada.invalid"

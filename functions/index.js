@@ -1,9 +1,11 @@
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { getAuth } = require("firebase-admin/auth");
 const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { onMessagePublished } = require("firebase-functions/v2/pubsub");
 const { PLAY_PRODUCTS, accountHash, playExpiryMillis } = require("./entitlement");
 const { applyPlaySubscription, fetchSubscription, acknowledgeIfNeeded, isOurs } = require("./playSubscriptions");
+const { deleteUserData } = require("./accountDeletion");
 
 initializeApp();
 const db = getFirestore();
@@ -55,4 +57,18 @@ exports.playNotifications = onMessagePublished({ topic: "play-rtdn", region: REG
   await applyPlaySubscription(db, FieldValue, { uid: purchase.data().uid, purchaseToken: note.purchaseToken, sub });
   await acknowledgeIfNeeded(sub, note.purchaseToken).catch((e) => console.error("Play acknowledge failed", e.message));
   console.log("play notification applied", note.notificationType, playExpiryMillis(sub) > Date.now() ? "active" : "inactive");
+});
+
+exports.deleteAccount = onCall({ region: REGION }, async (request) => {
+  if (!request.auth) throw new HttpsError("unauthenticated", "Sign in first.");
+  const uid = request.auth.uid;
+  try {
+    const removed = await deleteUserData(db, uid);
+    await getAuth().deleteUser(uid);
+    console.log("account deleted", removed.reports, "reports", removed.purchases, "purchases");
+    return { deleted: true };
+  } catch (e) {
+    console.error("account deletion failed", e && e.code, e && e.message);
+    throw new HttpsError("internal", "Couldn't delete your account right now. Please try again.");
+  }
 });

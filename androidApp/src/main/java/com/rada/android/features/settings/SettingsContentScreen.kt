@@ -35,6 +35,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.PersonRemove
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.remember
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -105,6 +109,26 @@ fun SettingsContentScreen(
 ) {
     val colors = MaterialTheme.colorScheme
     var showAlertSheet by rememberSaveable { mutableStateOf(false) }
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
+
+    if ((confirmDelete || state.deletingAccount) && state.deleteError == null) {
+        DeleteAccountDialog(
+            deleting = state.deletingAccount,
+            onConfirm = { onIntent(SettingsIntent.DeleteAccountConfirmed) },
+            onDismiss = { confirmDelete = false }
+        )
+    }
+    state.deleteError?.let { message ->
+        confirmDelete = false
+        AlertDialog(
+            onDismissRequest = { onIntent(SettingsIntent.DeleteErrorDismissed) },
+            title = { Text("Account not deleted") },
+            text = { Text(message) },
+            confirmButton = {
+                TextButton(onClick = { onIntent(SettingsIntent.DeleteErrorDismissed) }) { Text("OK") }
+            }
+        )
+    }
 
     if (showAlertSheet) {
         ModalBottomSheet(
@@ -192,6 +216,14 @@ fun SettingsContentScreen(
                     tint = RadaColors.Accent,
                     onClick = { onIntent(SettingsIntent.SignOutTapped) }
                 )
+                RowDivider()
+                ActionRow(
+                    icon = Icons.Outlined.PersonRemove,
+                    title = "Delete account",
+                    subtitle = "Permanently remove your account and data",
+                    tint = colors.error,
+                    onClick = { confirmDelete = true }
+                )
             }
             Spacer(Modifier.height(16.dp))
         }
@@ -199,6 +231,32 @@ fun SettingsContentScreen(
         Spacer(Modifier.height(BOTTOM_BAR_CLEARANCE))
 
     }
+}
+
+@Composable
+private fun DeleteAccountDialog(deleting: Boolean, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    AlertDialog(
+        onDismissRequest = { if (!deleting) onDismiss() },
+        title = { Text("Delete your account?") },
+        text = {
+            Text(
+                "This permanently deletes your Rada account, your drive statistics, your trial and Pro status, " +
+                    "and the reports you've submitted. It can't be undone.\n\n" +
+                    "If you subscribe to Rada Pro, cancel it in Google Play too. Deleting your account doesn't stop billing."
+            )
+        },
+        confirmButton = {
+            if (deleting) {
+                CircularProgressIndicator(Modifier.size(24.dp), color = colors.error, strokeWidth = 2.5.dp)
+            } else {
+                TextButton(onClick = onConfirm) { Text("Delete", color = colors.error, fontWeight = FontWeight.SemiBold) }
+            }
+        },
+        dismissButton = {
+            if (!deleting) TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }
 
 @Composable

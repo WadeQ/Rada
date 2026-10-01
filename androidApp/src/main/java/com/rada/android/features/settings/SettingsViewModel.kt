@@ -63,6 +63,8 @@ class SettingsViewModel(
             }
 
             is SettingsIntent.SignOutTapped -> signOut()
+            is SettingsIntent.DeleteAccountConfirmed -> deleteAccount()
+            is SettingsIntent.DeleteErrorDismissed -> setState { copy(deleteError = null) }
         }
     }
 
@@ -72,6 +74,27 @@ class SettingsViewModel(
             userProfilePreferences.clearUserName()
             photoStore.delete()
             sendEffect(SettingsEffect.NavigateToLogin)
+        }
+    }
+
+    private fun deleteAccount() {
+        if (currentState.deletingAccount) return
+        setState { copy(deletingAccount = true, deleteError = null) }
+        viewModelScope.launch {
+            authRepository.deleteAccount()
+                .onSuccess {
+                    userProfilePreferences.clearUserName()
+                    photoStore.delete()
+                    sendEffect(SettingsEffect.NavigateToLogin)
+                }
+                .onFailure {
+                    setState {
+                        copy(
+                            deletingAccount = false,
+                            deleteError = "Couldn't delete your account. Check your connection and try again."
+                        )
+                    }
+                }
         }
     }
 }

@@ -11,7 +11,9 @@ data class SettingsState(
     val userName: String = "",
     val photoPath: String? = null,
     val alertsEnabled: Boolean = true,
-    val warningLead: WarningLead = WarningLead.STANDARD
+    val warningLead: WarningLead = WarningLead.STANDARD,
+    val deletingAccount: Boolean = false,
+    val deleteError: String? = null
 ) : MviState
 
 sealed interface SettingsIntent : MviIntent {
@@ -21,6 +23,8 @@ sealed interface SettingsIntent : MviIntent {
     data class AlertsToggled(val enabled: Boolean) : SettingsIntent
     data class WarningLeadSelected(val lead: WarningLead) : SettingsIntent
     data object SignOutTapped : SettingsIntent
+    data object DeleteAccountConfirmed : SettingsIntent
+    data object DeleteErrorDismissed : SettingsIntent
 }
 
 sealed interface SettingsEffect : MviEffect {
